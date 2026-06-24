@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { router } from "expo-router";
-import { supabase } from "@/lib/supabase";
-import { syncOutbox } from "@/lib/sync/sync-outbox";
-import RouteSessionsDao from "@/lib/sqlite/dao/route-sessions-dao";
+import { supabase } from "@/src/lib/supabase";
+import RouteSessionsDao from "@/src/lib/dao/route-sessions-dao";
 
 export function useAppReady(checkingSession: boolean) {
   useEffect(() => {
@@ -20,9 +19,5 @@ export function useAppReady(checkingSession: boolean) {
         }
       }
     })();
-
-    syncOutbox();
-    const interval = setInterval(syncOutbox, 10_000);
-    return () => clearInterval(interval);
   }, [checkingSession]);
 }
