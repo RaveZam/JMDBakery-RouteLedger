@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> Engineering principles (*how* code is written) live in `AGENTS.md`. This file describes *what* the project is.
+
 ## Project Overview
 
 Monorepo for a bakery/retail distribution management system with three apps:
@@ -65,47 +67,55 @@ npm run deploy              # Deploy to production
 
 ## Agent Mobile App Architecture
 
+### Layering Rule
+
+Three layers, strictly separated:
+
+- **`services/` (data)** — all SQLite writes, outbox enqueues, and Supabase calls. Each mutation wraps `getDb().withTransactionSync(() => { dao.write(); enqueueOutbox(); })`.
+- **`core/` (pure logic)** — plain JS/business functions, especially anything reused by >1 caller.
+- **`hooks/` (React glue)** — `useState`/`useEffect`/`useCallback` only; call services + core. **No `getDb`, no `enqueueOutbox`, no raw SQL, no `JSON.stringify` payloads in hooks.** (Read-only DAO calls from hooks are fine.)
+
 ### Feature-Based Structure
 
 ```
+src/lib/                       # centralized data/core layer (mirrors FlexApp)
+  db.ts                        # lazy getDb() + async initDb() (PRAGMAs, schema, indexes)
+  uuid.ts                      # generateUUID()
+  network.ts                   # isWifiConnected()
+  supabase.ts                  # Supabase client (expo-sqlite/localStorage for session)
+  dao/                         # pure data access (routes-dao, sales-dao, ...)
+  sync/
+    outbox.ts                  # enqueueOutbox() + runOutboxSync()
+    download.ts                # runDownloadSync(userId): Supabase -> local pull
 src/features/
-  auth/         # useLogin hook, sign-in screen
-  routes/       # Route management (main feature)
-    screens/    # SelectRouteScreen, ListRouteScreen
-    components/ # RouteComponents (StoreCard, TenderedCard), createRouteModal
-    hooks/      # useGetRoutes
-    services/   # routesServices, routeSaveService
-    types/      # Route, CreateRouteDraft, DraftProvince, DraftStore
-  store/        # Distribution log (useDistributionLog, ProductLogForm)
-  settings/     # Settings screen
-lib/
-  sqlite/
-    db-migration.ts         # DB init (called on app launch)
-    dao/
-      routes-dao.ts         # getAllRoutes, insertRoute
-      province-dao.ts       # insertProvince
-      store-dao.ts          # insertStore
-  supabase.ts               # Supabase client (expo-sqlite/localStorage for session)
+  auth/                        # useLogin hook, sign-in screen
+  routes/                      # Route management (main feature)
+    screens/ components/ types/
+    hooks/                     # React-only (useRoutes, usePlanRoute, ...)
+    services/                  # storesLocalService, sessionLocalService, route-save-service
+  store/                       # Distribution log + inventory
+    services/                  # salesLocalService, inventoryLocalService, visitLocalService
+  settings/
 ```
 
 ### SQLite Database Layer
 
-Database: `routeledger.db` opened via `expo-sqlite`. Initialized in `app/_layout.tsx` via `initDb()`.
+Database: `routeledger-v2.db` opened lazily via `getDb()` (`src/lib/db.ts`). `initDb()` is async, runs `PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;`, creates tables `IF NOT EXISTS` plus hot-path indexes, and is awaited in `useAuthGuard` before the session check.
 
-**Schema:**
-
-```sql
-routes     (id TEXT PK, name TEXT NOT NULL)
-provinces  (id TEXT PK, name TEXT NOT NULL, route_id FK)
-stores     (id TEXT PK, name, province_id FK, address, contact_number, contact_name)
-```
+**Tables:** `routes`, `provinces`, `stores`, `route_sessions`, `session_stores`, `products`, `sales`, `session_inventory`, `ending_inventory`, `outbox` (see `src/lib/db.ts` for full schema).
 
 **Patterns:**
 
-- All DAOs use **synchronous** API: `db.runSync()`, `db.getAllSync()`
-- IDs are UUIDs generated via `uuid` v4 package (`uuidv4()`)
-- Multi-table inserts wrapped in `db.withTransactionSync()` (see `routeSaveService`)
-- No versioned migrations — tables created with `IF NOT EXISTS`
+- DAOs are **pure** sync data access (`getDb().runSync()`, `getDb().getAllSync()`); no business defaults or outbox calls inside DAOs.
+- IDs are UUIDs via `generateUUID()` (`src/lib/uuid.ts`).
+- Multi-table writes wrap `getDb().withTransactionSync()` in a service.
+- No versioned migrations — tables created `IF NOT EXISTS`; bump the DB filename to reset.
+
+### Offline Sync (outbox + pull)
+
+- **Outbox** (`src/lib/sync/outbox.ts`): generic queue `(entity_type, entity_id, operation, payload, synced_at)`. Services call `enqueueOutbox()` in the same transaction as the local write.
+- **Push** `runOutboxSync()`: drains `synced_at IS NULL` rows to Supabase (`create`→upsert, `update`→update.eq(id), `delete`→delete.eq(id)). Payloads are remote-shaped. Wired in `app/_layout.tsx` on launch + AppState foreground + 30s interval (gated on `!checkingSession`).
+- **Pull** `runDownloadSync(userId)`: hydrates server-owned tables (currently `products`); triggered once per signed-in user in `useAuthGuard`.
 
 ### Navigation (Expo Router)
 
