@@ -25,7 +25,7 @@ import { useRouteModals } from "../hooks/useRouteModals";
 import { StoreRow } from "../types/db-rows";
 import { usePlanRoute } from "@/src/features/sessions/hooks/usePlanRoute";
 
-export default function ListRouteScreen() {
+export default function RouteDetailScreen() {
   const params = useLocalSearchParams<{
     routeId?: string;
     routeName?: string;
@@ -43,7 +43,7 @@ export default function ListRouteScreen() {
     swipeableRefs,
     handleSaveRouteName,
     handleToggleEditing,
-  } = useRouteEditing(routeId, params.routeName ?? "Route");
+  } = useRouteEditing();
 
   const { createSession } = usePlanRoute(routeId ?? "", routeName);
 
@@ -54,7 +54,7 @@ export default function ListRouteScreen() {
     loadStoresForProvince,
     deleteProvince,
     deleteStore,
-  } = useProvinces(routeId);
+  } = useProvinces();
 
   const {
     showAddProvince,

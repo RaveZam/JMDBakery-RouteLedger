@@ -1,10 +1,16 @@
 import { useState, useCallback, useEffect } from "react";
+import { useLocalSearchParams } from "expo-router";
 import ProvincesDao from "@/src/lib/dao/province-dao";
 import StoresDao from "@/src/lib/dao/store-dao";
+import { routeSaveService } from "../services/route-save-service";
 import { ProvinceRow, StoreRow } from "../types/db-rows";
 
 
-export function useProvinces(routeId: string | undefined) {
+export function useProvinces() {
+  const { routeId: routeIdParam } = useLocalSearchParams<{ routeId?: string }>();
+  const routeId =
+    typeof routeIdParam === "string" ? routeIdParam : undefined;
+
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [storesByProvince, setStoresByProvince] = useState<
     Record<string, StoreRow[]>
@@ -34,7 +40,7 @@ export function useProvinces(routeId: string | undefined) {
 
   const deleteProvince = useCallback(
     (id: string) => {
-      ProvincesDao.deleteProvince(id);
+      routeSaveService.deleteProvince(id);
       loadProvinces();
     },
     [loadProvinces],
@@ -42,7 +48,7 @@ export function useProvinces(routeId: string | undefined) {
 
   const deleteStore = useCallback(
     (store: StoreRow) => {
-      StoresDao.deleteStore(store.id);
+      routeSaveService.deleteStore(store.id);
       loadStoresForProvince(store.province_id);
     },
     [loadStoresForProvince],

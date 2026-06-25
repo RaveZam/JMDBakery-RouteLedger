@@ -3,13 +3,18 @@ import {
   NativeSyntheticEvent,
   TextInputEndEditingEventData,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
-import RoutesDao from "@/src/lib/dao/routes-dao";
+import { routeSaveService } from "../services/route-save-service";
 
-export function useRouteEditing(
-  routeId: string | undefined,
-  initialName: string,
-) {
+export function useRouteEditing() {
+  const { routeId: routeIdParam, routeName: routeNameParam } =
+    useLocalSearchParams<{ routeId?: string; routeName?: string }>();
+  const routeId =
+    typeof routeIdParam === "string" ? routeIdParam : undefined;
+  const initialName =
+    typeof routeNameParam === "string" ? routeNameParam : "Route";
+
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [routeName, setRouteName] = useState(initialName);
@@ -21,7 +26,7 @@ export function useRouteEditing(
   ) => {
     const trimmed = e.nativeEvent.text.trim();
     if (trimmed && routeId) {
-      RoutesDao.renameRoute(routeId, trimmed);
+      routeSaveService.renameRoute(routeId, trimmed);
       setRouteName(trimmed);
       setRouteNameDraft(trimmed);
     } else {
