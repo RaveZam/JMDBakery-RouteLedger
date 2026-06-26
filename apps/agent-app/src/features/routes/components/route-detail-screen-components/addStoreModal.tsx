@@ -9,9 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useEffect } from "react";
 import { ThemedText } from "@/src/shared/components/ThemedText";
 import { Colors } from "@/src/shared/constants/Colors";
-import { useStoreForm, ExistingStore } from "../../hooks/useStoreForm";
+import { addStore, updateStore } from "../../services/storesLocalService";
+import {
+  useStoreForm,
+  toStoreFields,
+  ExistingStore,
+} from "../../hooks/useStoreForm";
 
 interface AddStoreModalProps {
   provinceId: string;
@@ -30,23 +36,24 @@ export function AddStoreModal({
   initialStore,
   onUpdated,
 }: AddStoreModalProps) {
-  const {
-    isEditing,
-    name,
-    setName,
-    province,
-    setProvince,
-    city,
-    setCity,
-    barangay,
-    setBarangay,
-    contactName,
-    setContactName,
-    contactPhone,
-    setContactPhone,
-    canSubmit,
-    handleSubmit,
-  } = useStoreForm(provinceId, onClose, onAdded, initialStore, onUpdated);
+  const { fields, setField, reset, canSubmit } = useStoreForm();
+  const isEditing = !!initialStore;
+
+  useEffect(() => {
+    if (initialStore) reset(toStoreFields(initialStore));
+  }, [initialStore, reset]);
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    if (isEditing && initialStore) {
+      await updateStore(initialStore.id, fields);
+      onUpdated?.();
+    } else {
+      await addStore(provinceId, fields);
+      onAdded();
+    }
+    onClose();
+  };
 
   return (
     <Modal
@@ -77,8 +84,8 @@ export function AddStoreModal({
                 <View style={styles.field}>
                   <Text style={styles.label}>Store name *</Text>
                   <TextInput
-                    value={name}
-                    onChangeText={setName}
+                    value={fields.name}
+                    onChangeText={(value) => setField("name", value)}
                     placeholder="e.g. Guadalupe Market"
                     placeholderTextColor="#94A3B8"
                     style={styles.input}
@@ -89,8 +96,8 @@ export function AddStoreModal({
                 <View style={styles.field}>
                   <Text style={styles.label}>Province</Text>
                   <TextInput
-                    value={province}
-                    onChangeText={setProvince}
+                    value={fields.province}
+                    onChangeText={(value) => setField("province", value)}
                     placeholder="e.g. Metro Manila"
                     placeholderTextColor="#94A3B8"
                     style={styles.input}
@@ -101,8 +108,8 @@ export function AddStoreModal({
                   <View style={styles.fieldHalf}>
                     <Text style={styles.label}>City</Text>
                     <TextInput
-                      value={city}
-                      onChangeText={setCity}
+                      value={fields.city}
+                      onChangeText={(value) => setField("city", value)}
                       placeholder="e.g. Makati City"
                       placeholderTextColor="#94A3B8"
                       style={styles.input}
@@ -111,8 +118,8 @@ export function AddStoreModal({
                   <View style={styles.fieldHalf}>
                     <Text style={styles.label}>Barangay</Text>
                     <TextInput
-                      value={barangay}
-                      onChangeText={setBarangay}
+                      value={fields.barangay}
+                      onChangeText={(value) => setField("barangay", value)}
                       placeholder="e.g. Guadalupe Nuevo"
                       placeholderTextColor="#94A3B8"
                       style={styles.input}
@@ -124,8 +131,8 @@ export function AddStoreModal({
                   <View style={styles.fieldHalf}>
                     <Text style={styles.label}>Contact name</Text>
                     <TextInput
-                      value={contactName}
-                      onChangeText={setContactName}
+                      value={fields.contactName}
+                      onChangeText={(value) => setField("contactName", value)}
                       placeholder="e.g. Rico"
                       placeholderTextColor="#94A3B8"
                       style={styles.input}
@@ -134,8 +141,8 @@ export function AddStoreModal({
                   <View style={styles.fieldHalf}>
                     <Text style={styles.label}>Contact number</Text>
                     <TextInput
-                      value={contactPhone}
-                      onChangeText={setContactPhone}
+                      value={fields.contactPhone}
+                      onChangeText={(value) => setField("contactPhone", value)}
                       placeholder="0917 000 0000"
                       placeholderTextColor="#94A3B8"
                       style={styles.input}
@@ -147,10 +154,7 @@ export function AddStoreModal({
             </ScrollView>
 
             <View style={styles.buttonsRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={onClose}
-              >
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity

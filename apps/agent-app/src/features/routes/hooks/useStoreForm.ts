@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { addStore, updateStore } from "../services/storesLocalService";
+import { useCallback, useState } from "react";
 
 export type ExistingStore = {
   id: string;
@@ -11,56 +10,40 @@ export type ExistingStore = {
   contact_number: string;
 };
 
-export function useStoreForm(
-  provinceId: string,
-  onClose: () => void,
-  onAdded: () => void,
-  initialStore?: ExistingStore,
-  onUpdated?: () => void,
-) {
-  const isEditing = !!initialStore;
+export type StoreFields = {
+  name: string;
+  province: string;
+  city: string;
+  barangay: string;
+  contactName: string;
+  contactPhone: string;
+};
 
-  const [name, setName] = useState(initialStore?.name ?? "");
-  const [province, setProvince] = useState(initialStore?.province ?? "");
-  const [city, setCity] = useState(initialStore?.city ?? "");
-  const [barangay, setBarangay] = useState(initialStore?.barangay ?? "");
-  const [contactName, setContactName] = useState(
-    initialStore?.contact_name ?? "",
-  );
-  const [contactPhone, setContactPhone] = useState(
-    initialStore?.contact_number ?? "",
-  );
+const emptyFields = (): StoreFields => ({
+  name: "",
+  province: "",
+  city: "",
+  barangay: "",
+  contactName: "",
+  contactPhone: "",
+});
 
-  const canSubmit = name.trim().length > 0;
+export const toStoreFields = (store: ExistingStore): StoreFields => ({
+  name: store.name,
+  province: store.province,
+  city: store.city,
+  barangay: store.barangay,
+  contactName: store.contact_name,
+  contactPhone: store.contact_number,
+});
 
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
-    const fields = { name, province, city, barangay, contactName, contactPhone };
-    if (isEditing && initialStore) {
-      await updateStore(initialStore.id, fields);
-      onUpdated?.();
-    } else {
-      await addStore(provinceId, fields);
-      onAdded();
-    }
-    onClose();
-  };
+export function useStoreForm() {
+  const [fields, setFields] = useState<StoreFields>(emptyFields);
+  const setField = (key: keyof StoreFields, value: string) =>
+    setFields((current) => ({ ...current, [key]: value }));
+  const reset = useCallback((next: StoreFields) => setFields(next), []);
 
-  return {
-    isEditing,
-    name,
-    setName,
-    province,
-    setProvince,
-    city,
-    setCity,
-    barangay,
-    setBarangay,
-    contactName,
-    setContactName,
-    contactPhone,
-    setContactPhone,
-    canSubmit,
-    handleSubmit,
-  };
+  const canSubmit = fields.name.trim().length > 0;
+
+  return { fields, setField, reset, canSubmit };
 }

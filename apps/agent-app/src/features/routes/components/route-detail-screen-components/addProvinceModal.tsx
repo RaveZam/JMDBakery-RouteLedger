@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { ThemedText } from "@/src/shared/components/ThemedText";
 import { Colors } from "@/src/shared/constants/Colors";
+import { routeSaveService } from "../../services/route-save-service";
 import { useAddProvinceForm } from "../../hooks/useAddProvinceForm";
 
 interface AddProvinceModalProps {
@@ -21,8 +22,20 @@ export function AddProvinceModal({
   onClose,
   onAdded,
 }: AddProvinceModalProps) {
-  const { provinceName, setProvinceName, canSubmit, handleCancel, handleAdd } =
-    useAddProvinceForm(routeId, onClose, onAdded);
+  const { provinceName, setProvinceName, canSubmit, reset } =
+    useAddProvinceForm();
+
+  const handleCancel = () => {
+    reset();
+    onClose();
+  };
+
+  const handleAdd = () => {
+    if (!canSubmit) return;
+    routeSaveService.addProvince(routeId, provinceName);
+    reset();
+    onAdded();
+  };
 
   return (
     <Modal
