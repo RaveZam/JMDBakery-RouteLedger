@@ -21,9 +21,10 @@ export function RouteDetailProvider({ children }: { children: ReactNode }) {
   const provinces = useProvinces();
   const modals = useRouteModals();
 
-  const { routeId: routeIdParam } = useLocalSearchParams<{ routeId?: string }>();
-  const routeId =
-    typeof routeIdParam === "string" ? routeIdParam : undefined;
+  const { routeId: routeIdParam } = useLocalSearchParams<{
+    routeId?: string;
+  }>();
+  const routeId = typeof routeIdParam === "string" ? routeIdParam : undefined;
   const { createSession } = usePlanRoute(routeId ?? "", editing.routeName);
 
   const value: RouteDetailContextValue = {
