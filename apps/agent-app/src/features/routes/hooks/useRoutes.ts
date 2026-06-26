@@ -7,6 +7,7 @@ import { Route } from "../types/routes-type";
 export function useRoutes() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [pendingDelete, setPendingDelete] = useState<Route | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   //used to track swiped routes for deletion
   const swipeableRefs = useRef<Record<string, Swipeable | null>>({});
 
@@ -32,19 +33,34 @@ export function useRoutes() {
   };
 
   const handleDeleteCancel = () => {
-    if (pendingDelete) {
-      swipeableRefs.current[pendingDelete.id]?.close();
-    }
+    if (!pendingDelete) return;
+    swipeableRefs.current[pendingDelete.id]?.close();
     setPendingDelete(null);
+  };
+
+  const openCreateModal = () => setShowCreateModal(true);
+  const closeCreateModal = () => setShowCreateModal(false);
+
+  const handleCreateRoute = (routeName: string) => {
+    routeSaveService.createRoute(routeName);
+    setShowCreateModal(false);
+    loadRoutes();
   };
 
   return {
     routes,
     loadRoutes,
-    pendingDelete,
-    registerRef,
-    requestDelete,
-    handleDeleteConfirm,
-    handleDeleteCancel,
+    swipe: { registerRef, requestDelete },
+    createModal: {
+      isOpen: showCreateModal,
+      open: openCreateModal,
+      close: closeCreateModal,
+      submit: handleCreateRoute,
+    },
+    deleteModal: {
+      pending: pendingDelete,
+      confirm: handleDeleteConfirm,
+      cancel: handleDeleteCancel,
+    },
   };
 }

@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { StyleSheet, View, ScrollView, Text } from "react-native";
 import { router } from "expo-router";
-import { useRoutes } from "../../hooks/useRoutes";
+import { useRoutesContext } from "../../context/useRoutesContext";
 import { CreateRouteModal } from "./CreateRouteModal";
 import { RouteCard } from "./RouteCard";
 import { EmptyRoutes } from "./EmptyRoutes";
@@ -9,16 +8,7 @@ import { CreateRouteFab } from "./CreateRouteFab";
 import { DeleteRouteModal } from "./DeleteRouteModal";
 
 export function RouteList() {
-  const {
-    routes,
-    loadRoutes,
-    pendingDelete,
-    registerRef,
-    requestDelete,
-    handleDeleteConfirm,
-    handleDeleteCancel,
-  } = useRoutes();
-  const [showCreateRouteModal, setShowCreateRouteModal] = useState(false);
+  const { routes, createModal } = useRoutesContext();
 
   return (
     <>
@@ -37,42 +27,16 @@ export function RouteList() {
           {routes.length === 0 ? (
             <EmptyRoutes />
           ) : (
-            routes.map((route) => (
-              <RouteCard
-                key={route.id}
-                route={route}
-                registerRef={registerRef}
-                onPress={() =>
-                  router.push({
-                    pathname: "/main/routes/list",
-                    params: { routeId: route.id, routeName: route.name },
-                  })
-                }
-                onDelete={() => requestDelete(route)}
-              />
-            ))
+            routes.map((route) => <RouteCard key={route.id} route={route} />)
           )}
         </ScrollView>
       </View>
 
-      {!showCreateRouteModal && (
-        <CreateRouteFab onPress={() => setShowCreateRouteModal(true)} />
-      )}
+      {!createModal.isOpen && <CreateRouteFab />}
 
-      {showCreateRouteModal && (
-        <CreateRouteModal
-          onClose={() => {
-            setShowCreateRouteModal(false);
-            loadRoutes();
-          }}
-        />
-      )}
+      {createModal.isOpen && <CreateRouteModal />}
 
-      <DeleteRouteModal
-        route={pendingDelete}
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-      />
+      <DeleteRouteModal />
     </>
   );
 }

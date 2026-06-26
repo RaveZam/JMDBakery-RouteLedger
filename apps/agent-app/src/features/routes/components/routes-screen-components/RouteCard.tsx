@@ -2,25 +2,26 @@ import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 import { Route } from "../../types/routes-type";
+import { useRoutesContext } from "../../context/useRoutesContext";
+import { useRouter } from "expo-router";
 
 type Props = {
   route: Route;
-  registerRef: (id: string, ref: Swipeable | null) => void;
-  onPress: () => void;
-  onDelete: () => void;
 };
 
-export function RouteCard({ route, registerRef, onPress, onDelete }: Props) {
+export function RouteCard({ route }: Props) {
+  const router = useRouter();
+  const { swipe } = useRoutesContext();
   return (
     <Swipeable
       ref={(ref) => {
-        registerRef(route.id, ref);
+        swipe.registerRef(route.id, ref);
       }}
       renderRightActions={() => (
         <TouchableOpacity
           style={styles.deleteAction}
           activeOpacity={0.8}
-          onPress={onDelete}
+          onPress={() => swipe.requestDelete(route)}
         >
           <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
           <Text style={styles.deleteActionText}>Delete</Text>
@@ -32,7 +33,12 @@ export function RouteCard({ route, registerRef, onPress, onDelete }: Props) {
       <TouchableOpacity
         activeOpacity={0.7}
         style={styles.routeCard}
-        onPress={onPress}
+        onPress={() =>
+          router.push({
+            pathname: "/main/routes/list",
+            params: { routeId: route.id, routeName: route.name },
+          })
+        }
         testID={`route-item-${route.id}`}
       >
         <View style={styles.routeIconWrap}>

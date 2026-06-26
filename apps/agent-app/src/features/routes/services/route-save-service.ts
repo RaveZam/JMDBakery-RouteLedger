@@ -50,6 +50,12 @@ export const routeSaveService = {
   // Route-building entities (routes/provinces/stores added here) are local-only:
   // createRouteFromDraft never enqueues, so these mutations stay off the outbox
   // to match. If routes/provinces ever need to sync, wire create + these together.
+  createRoute(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    RoutesDao.insertRoute(trimmed);
+  },
+
   renameRoute(id: string, name: string) {
     const trimmed = name.trim();
     if (!trimmed) return;

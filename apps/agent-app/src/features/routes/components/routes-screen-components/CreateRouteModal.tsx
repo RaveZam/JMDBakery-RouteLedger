@@ -9,24 +9,15 @@ import {
 } from "react-native";
 import { ThemedText } from "@/src/shared/components/ThemedText";
 import { Colors } from "@/src/shared/constants/Colors";
-import RoutesDao from "@/src/lib/dao/routes-dao";
+import { useRoutesContext } from "../../context/useRoutesContext";
 
-interface CreateRouteModalProps {
-  onClose: () => void;
-}
-
-export function CreateRouteModal({ onClose }: CreateRouteModalProps) {
+export function CreateRouteModal() {
+  const { createModal } = useRoutesContext();
   const [routeName, setRouteName] = useState("");
+
   const handleCancel = () => {
     setRouteName("");
-    onClose();
-  };
-
-  const handleCreateRoute = () => {
-    if (!routeName.trim()) return;
-    RoutesDao.insertRoute(routeName);
-    setRouteName("");
-    onClose();
+    createModal.close();
   };
 
   return (
@@ -68,7 +59,7 @@ export function CreateRouteModal({ onClose }: CreateRouteModalProps) {
                 !routeName.trim() && styles.modalPrimaryButtonDisabled,
               ]}
               disabled={!routeName.trim()}
-              onPress={handleCreateRoute}
+              onPress={() => createModal.submit(routeName)}
             >
               <Text style={styles.modalPrimaryButtonText}>
                 Create New Route
