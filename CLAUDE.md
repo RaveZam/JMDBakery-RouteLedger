@@ -72,8 +72,8 @@ npm run deploy              # Deploy to production
 Three layers, strictly separated:
 
 - **`services/` (data)** — all SQLite writes, outbox enqueues, and Supabase calls. Each mutation wraps `getDb().withTransactionSync(() => { dao.write(); enqueueOutbox(); })`.
-- **`core/` (pure logic)** — plain JS/business functions, especially anything reused by >1 caller.
-- **`hooks/` (React glue)** — `useState`/`useEffect`/`useCallback` only; call services + core. **No `getDb`, no `enqueueOutbox`, no raw SQL, no `JSON.stringify` payloads in hooks.** (Read-only DAO calls from hooks are fine.)
+- **`core/` (pure logic)** — plain JS business functions: data in, new data out. **No React, no I/O, no imports of either, no mutation of arguments.** This is what makes `core/` testable with zero mocks / zero async / zero React (see AGENTS.md → "Testing `core/`"). If a behavior can't be tested without mocking the DB or rendering a component, it belongs here, not in the hook.
+- **`hooks/` (React glue)** — thin shell: `useState`/`useEffect`/`useCallback` only. Hold state, call a `core/` function for the next value, set state, hand off to a service to persist. **No `getDb`, no `enqueueOutbox`, no raw SQL, no `JSON.stringify` payloads, no business math in hooks.** (Read-only DAO calls from hooks are fine.)
 
 ### Feature-Based Structure
 

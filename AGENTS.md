@@ -12,6 +12,88 @@ CLAUDE.md describes *what* the project is.
   That ordering is implementation detail — hide it behind one method.
 - Don't add interface (files, methods, params) without hiding complexity.
 
+## Three roles per feature (so core stays testable)
+
+Every piece of behavior lands in exactly one of three roles. The split exists so
+`core/` can be tested with **zero mocks, zero async, zero React**.
+
+- **`core/` — pure.** No React, no I/O, and no imports of either. Takes plain
+  data in, returns new plain data out. Never mutates its arguments (return a new
+  object/array; the input stays untouched). A `core/` function is a pure function
+  of its arguments: same input → same output, no side effects, nothing to mock.
+- **`services/` — I/O.** All SQLite, outbox, and Supabase calls. The only layer
+  allowed to touch the DB or network.
+- **`hooks/` — thin React shell.** `useState`/`useEffect`/`useCallback` only.
+  A hook holds state, calls a `core/` function to compute the next value, sets
+  state, then hands the result to a service for persistence. No business math,
+  no raw SQL, no `getDb`, no `JSON.stringify` payloads in the hook.
+
+The shape to aim for:
+
+```js
+// hooks/useWorkoutSession.js — thin shell: React + delegation, nothing else
+function useWorkoutSession(sessionId) {
+  const [session, setSession] = useState(null);
+
+  async function onCompleteSet(exerciseId, setIndex) {
+    const next = completeSet(session, exerciseId, setIndex); // core (pure)
+    setSession(next);                                        // React
+    await saveSession(next);                                 // services (I/O)
+  }
+
+  return { session, onCompleteSet };
+}
+```
+
+```js
+// core/session.js — pure: no React, no I/O, no imports of either
+export function completeSet(session, exerciseId, setIndex) {
+  const exercises = session.exercises.map(e =>
+    e.id !== exerciseId ? e : {
+      ...e,
+      sets: e.sets.map((s, i) => (i === setIndex ? { ...s, done: true } : s)),
+    }
+  );
+  const allSets = exercises.flatMap(e => e.sets);
+  const progress = allSets.filter(s => s.done).length / allSets.length;
+  return {
+    ...session,
+    exercises,
+    progress,
+    status: progress === 1 ? "complete" : session.status,
+  };
+}
+```
+
+If you can't test a behavior without mocking the DB, network, or rendering a
+component, the logic is in the wrong layer — move it down into `core/`.
+
+## Testing `core/` (zero-mock)
+
+Because `core/` is pure, its tests need no `jest.mock`, no `await`, no
+`render`/`renderHook`. Call the function, assert on the returned data, and assert
+the input was not mutated.
+
+```js
+// core/session.test.js — zero mocks, zero async, zero React
+test("completing the last set marks session complete", () => {
+  const before = {
+    status: "active",
+    exercises: [{ id: "e1", sets: [{ done: true }, { done: false }] }],
+  };
+  const after = completeSet(before, "e1", 1);
+
+  expect(after.progress).toBe(1);
+  expect(after.status).toBe("complete");
+  expect(before.exercises[0].sets[1].done).toBe(false); // original untouched
+});
+```
+
+- One pure function = one test file beside it (`core/session.ts` → `core/session.test.ts`).
+- Cover the edge it computes (boundaries, empty lists, the "last one" case), and
+  always assert immutability of the input where the function returns derived data.
+- Keep mocks for the `hooks/`/`services/` seam only — never for `core/`.
+
 ## Architecture Principles
 
 - No abstraction layers that don't reduce real duplication.
