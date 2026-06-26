@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -9,7 +8,7 @@ import {
 } from "react-native";
 import { ThemedText } from "@/src/shared/components/ThemedText";
 import { Colors } from "@/src/shared/constants/Colors";
-import ProvincesDao from "@/src/lib/dao/province-dao";
+import { useAddProvinceForm } from "../../hooks/useAddProvinceForm";
 
 interface AddProvinceModalProps {
   routeId: string;
@@ -22,19 +21,8 @@ export function AddProvinceModal({
   onClose,
   onAdded,
 }: AddProvinceModalProps) {
-  const [provinceName, setProvinceName] = useState("");
-
-  const handleCancel = () => {
-    setProvinceName("");
-    onClose();
-  };
-
-  const handleAdd = () => {
-    if (!provinceName.trim()) return;
-    ProvincesDao.insertProvince(routeId, provinceName.trim());
-    setProvinceName("");
-    onAdded();
-  };
+  const { provinceName, setProvinceName, canSubmit, handleCancel, handleAdd } =
+    useAddProvinceForm(routeId, onClose, onAdded);
 
   return (
     <Modal
@@ -72,9 +60,9 @@ export function AddProvinceModal({
             <TouchableOpacity
               style={[
                 styles.modalPrimaryButton,
-                !provinceName.trim() && styles.modalPrimaryButtonDisabled,
+                !canSubmit && styles.modalPrimaryButtonDisabled,
               ]}
-              disabled={!provinceName.trim()}
+              disabled={!canSubmit}
               onPress={handleAdd}
             >
               <Text style={styles.modalPrimaryButtonText}>Add</Text>

@@ -60,6 +60,12 @@ export const routeSaveService = {
     RoutesDao.deleteRoute(id);
   },
 
+  addProvince(routeId: string, name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    ProvincesDao.insertProvince(routeId, trimmed);
+  },
+
   deleteProvince(id: string) {
     ProvincesDao.deleteProvince(id);
   },

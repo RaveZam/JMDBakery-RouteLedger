@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -12,19 +11,7 @@ import {
 } from "react-native";
 import { ThemedText } from "@/src/shared/components/ThemedText";
 import { Colors } from "@/src/shared/constants/Colors";
-import StoresDao from "@/src/lib/dao/store-dao";
-import { useAddStore } from "../../hooks/useAddStore";
-import { useUpdateStore } from "../../hooks/useUpdateStore";
-
-type ExistingStore = {
-  id: string;
-  name: string;
-  province: string;
-  city: string;
-  barangay: string;
-  contact_name: string;
-  contact_number: string;
-};
+import { useStoreForm, ExistingStore } from "../../hooks/useStoreForm";
 
 interface AddStoreModalProps {
   provinceId: string;
@@ -43,51 +30,23 @@ export function AddStoreModal({
   initialStore,
   onUpdated,
 }: AddStoreModalProps) {
-  const isEditing = !!initialStore;
-
-  const [name, setName] = useState(initialStore?.name ?? "");
-  const [province, setProvince] = useState(initialStore?.province ?? "");
-  const [city, setCity] = useState(initialStore?.city ?? "");
-  const [barangay, setBarangay] = useState(initialStore?.barangay ?? "");
-  const [contactName, setContactName] = useState(
-    initialStore?.contact_name ?? "",
-  );
-  const [contactPhone, setContactPhone] = useState(
-    initialStore?.contact_number ?? "",
-  );
-
-  const handleCancel = () => {
-    onClose();
-  };
-
-  const handleSubmit = async () => {
-    if (!name.trim()) return;
-    if (isEditing && initialStore) {
-      await useUpdateStore(
-        initialStore.id,
-        name.trim(),
-        province.trim(),
-        city.trim(),
-        barangay.trim(),
-        contactName.trim(),
-        contactPhone.trim(),
-      );
-      onUpdated?.();
-    } else {
-      await useAddStore(
-        provinceId,
-        name.trim(),
-        province.trim(),
-        city.trim(),
-        barangay.trim(),
-        contactName.trim(),
-        contactPhone.trim(),
-      );
-
-      onAdded();
-    }
-    handleCancel();
-  };
+  const {
+    isEditing,
+    name,
+    setName,
+    province,
+    setProvince,
+    city,
+    setCity,
+    barangay,
+    setBarangay,
+    contactName,
+    setContactName,
+    contactPhone,
+    setContactPhone,
+    canSubmit,
+    handleSubmit,
+  } = useStoreForm(provinceId, onClose, onAdded, initialStore, onUpdated);
 
   return (
     <Modal
@@ -95,7 +54,7 @@ export function AddStoreModal({
       animationType="fade"
       transparent={true}
       statusBarTranslucent={true}
-      onRequestClose={handleCancel}
+      onRequestClose={onClose}
     >
       <KeyboardAvoidingView
         style={styles.flex}
@@ -190,16 +149,16 @@ export function AddStoreModal({
             <View style={styles.buttonsRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={handleCancel}
+                onPress={onClose}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.addButton,
-                  !name.trim() && styles.addButtonDisabled,
+                  !canSubmit && styles.addButtonDisabled,
                 ]}
-                disabled={!name.trim()}
+                disabled={!canSubmit}
                 onPress={handleSubmit}
               >
                 <Text style={styles.addButtonText}>
