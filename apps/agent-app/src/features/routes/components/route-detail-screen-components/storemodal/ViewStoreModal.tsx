@@ -12,6 +12,7 @@ import {
   deleteStore,
   StoreFields,
 } from "../../../services/store-save-service";
+import { DeleteStoreModal } from "../DeleteStoreModal";
 import { styles } from "./styles";
 
 export function ViewStoreModal({
@@ -20,9 +21,11 @@ export function ViewStoreModal({
   onChanged,
 }: ViewStoreModalProps) {
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const close = () => {
     setEditing(false);
+    setConfirmDelete(false);
     onClose();
   };
 
@@ -72,12 +75,18 @@ export function ViewStoreModal({
               <ContactCard store={store} />
               <StoreActions
                 onEdit={() => setEditing(true)}
-                onDelete={handleDelete}
+                onDelete={() => setConfirmDelete(true)}
               />
             </>
           ) : null}
         </View>
       </View>
+
+      <DeleteStoreModal
+        store={confirmDelete ? store : null}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </Modal>
   );
 }
