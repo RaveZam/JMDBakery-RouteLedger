@@ -6,17 +6,10 @@ import { ProvinceRow } from "../../types/db-rows";
 
 type Props = {
   provinces: ProvinceRow[];
-  onSelectStore: (storeId: string) => void;
   onEditProvince: (province: ProvinceRow) => void;
-  refreshKey?: number;
 };
 
-export function ProvinceList({
-  provinces,
-  onSelectStore,
-  onEditProvince,
-  refreshKey,
-}: Props) {
+export function ProvinceList({ provinces, onEditProvince }: Props) {
   return (
     <View style={styles.content}>
       <ScrollView
@@ -36,9 +29,7 @@ export function ProvinceList({
             <ProvinceCard
               key={province.id}
               province={province}
-              onSelectStore={onSelectStore}
               onEditProvince={onEditProvince}
-              refreshKey={refreshKey}
             />
           ))
         )}

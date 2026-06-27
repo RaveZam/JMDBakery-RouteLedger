@@ -1,31 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ProvinceRow } from "../../types/db-rows";
 import { useStores } from "../../hooks/useStores";
+import { useStoreDetail } from "../../hooks/useStoreDetail";
 import { StoreListRow } from "./StoreListRow";
 import { AddStoreModal } from "./AddStoreModal";
+import { ViewStoreModal } from "./storemodal";
 
 type Props = {
   province: ProvinceRow;
-  onSelectStore: (storeId: string) => void;
   onEditProvince: (province: ProvinceRow) => void;
-  refreshKey?: number;
 };
 
-export function ProvinceCard({
-  province,
-  onSelectStore,
-  onEditProvince,
-  refreshKey,
-}: Props) {
+export function ProvinceCard({ province, onEditProvince }: Props) {
   const { stores, loadStores } = useStores(province.id);
+  const { store, openStore, closeStore } = useStoreDetail();
   const [showAddStore, setShowAddStore] = useState(false);
-
-  // Reload when the screen signals a store changed (the hook already loads on mount).
-  useEffect(() => {
-    if (refreshKey) loadStores();
-  }, [refreshKey, loadStores]);
 
   return (
     <View style={styles.provincePanel} testID={`province-item-${province.id}`}>
@@ -64,10 +55,10 @@ export function ProvinceCard({
         <Text style={styles.noStoresText}>No stores added yet</Text>
       ) : (
         <View style={styles.storeList}>
-          {stores.map((store, index) => (
-            <View key={store.id}>
+          {stores.map((s, index) => (
+            <View key={s.id}>
               {index > 0 && <View style={styles.storeDivider} />}
-              <StoreListRow store={store} onPress={onSelectStore} />
+              <StoreListRow store={s} onPress={openStore} />
             </View>
           ))}
         </View>
@@ -82,6 +73,12 @@ export function ProvinceCard({
           setShowAddStore(false);
           loadStores();
         }}
+      />
+
+      <ViewStoreModal
+        store={store}
+        onClose={closeStore}
+        onChanged={loadStores}
       />
     </View>
   );

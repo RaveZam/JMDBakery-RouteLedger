@@ -6,11 +6,9 @@ import { ThemedView } from "@/src/shared/components/ThemedView";
 import { Colors } from "@/src/shared/constants/Colors";
 
 import { ProvinceList } from "../components/route-detail-screen-components/ProvinceList";
-import { ViewStoreModal } from "../components/route-detail-screen-components/storemodal";
 import { AddProvinceModal } from "../components/route-detail-screen-components/AddProvinceModal";
 import { EditProvinceModal } from "../components/route-detail-screen-components/EditProvinceModal";
 import { RouteDetailBanner } from "../components/route-detail-screen-components/RouteDetailBanner";
-import { useStoreDetail } from "../hooks/useStoreDetail";
 import { useProvinces } from "../hooks/useProvinces";
 import { ProvinceRow } from "../types/db-rows";
 
@@ -19,12 +17,10 @@ export default function RouteDetailScreen() {
     routeId?: string;
     routeName?: string;
   }>();
-  const { store, openStore, closeStore } = useStoreDetail();
-  const { provinces, loadProvinces } = useProvinces(routeId ?? "");
+  const { provinces, loadProvinces } = useProvinces();
 
   const [showAddProvince, setShowAddProvince] = useState(false);
   const [editProvince, setEditProvince] = useState<ProvinceRow | null>(null);
-  const [storeRefresh, setStoreRefresh] = useState(0);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
@@ -37,9 +33,7 @@ export default function RouteDetailScreen() {
         />
         <ProvinceList
           provinces={provinces}
-          onSelectStore={openStore}
           onEditProvince={setEditProvince}
-          refreshKey={storeRefresh}
         />
       </ThemedView>
 
@@ -57,12 +51,6 @@ export default function RouteDetailScreen() {
         province={editProvince}
         onClose={() => setEditProvince(null)}
         onChanged={loadProvinces}
-      />
-
-      <ViewStoreModal
-        store={store}
-        onClose={closeStore}
-        onChanged={() => setStoreRefresh((n) => n + 1)}
       />
     </SafeAreaView>
   );
