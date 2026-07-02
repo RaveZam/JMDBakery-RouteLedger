@@ -38,12 +38,13 @@ export async function initDb(): Promise<void> {
     );
 
     CREATE TABLE IF NOT EXISTS route_sessions (
-      id           TEXT PRIMARY KEY,
-      route_name   TEXT NOT NULL,
-      session_date TEXT NOT NULL,
-      conducted_by TEXT NOT NULL,
-      status       TEXT NOT NULL DEFAULT 'ongoing' CHECK(status IN ('ongoing', 'completed')),
-      created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+      id                          TEXT PRIMARY KEY,
+      route_name                  TEXT NOT NULL,
+      session_date                TEXT NOT NULL,
+      conducted_by                TEXT NOT NULL,
+      status                      TEXT NOT NULL DEFAULT 'ongoing' CHECK(status IN ('ongoing', 'completed')),
+      morning_inventory_finished  INTEGER NOT NULL DEFAULT 0,
+      created_at                  TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS session_stores (
@@ -114,4 +115,13 @@ export async function initDb(): Promise<void> {
     CREATE INDEX IF NOT EXISTS ending_inventory_session_idx ON ending_inventory(route_session_id);
     CREATE INDEX IF NOT EXISTS outbox_pending_idx ON outbox(synced_at) WHERE synced_at IS NULL;
   `);
+
+  // Column-level migrations for existing installs
+  try {
+    database.runSync(
+      `ALTER TABLE route_sessions ADD COLUMN morning_inventory_finished INTEGER NOT NULL DEFAULT 0`,
+    );
+  } catch {
+    // column already exists — safe to ignore
+  }
 }

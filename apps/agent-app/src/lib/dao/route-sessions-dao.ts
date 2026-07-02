@@ -8,6 +8,7 @@ export type RouteSessionRow = {
   session_date: string;
   conducted_by: string;
   status: string;
+  morning_inventory_finished: 0 | 1;
   created_at: string;
 };
 
@@ -28,6 +29,13 @@ const RouteSessionsDao = {
   complete(id: string) {
     getDb().runSync(
       `UPDATE route_sessions SET status = 'completed' WHERE id = ?`,
+      [id],
+    );
+  },
+
+  markInventoryFinished(id: string) {
+    getDb().runSync(
+      `UPDATE route_sessions SET morning_inventory_finished = 1 WHERE id = ?`,
       [id],
     );
   },
