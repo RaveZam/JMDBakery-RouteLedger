@@ -1,29 +1,22 @@
 import { StyleSheet, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSessionRoute } from "../../context/useSessionRoute";
+import { formatLongDate } from "@/src/shared/helpers/formatLongDate";
 
-type Props = {
-  routeName: string;
-  visitedCount: number;
-  totalCount: number;
-  formattedDate: string;
-};
-
-export function SessionRouteHeader({
-  routeName,
-  visitedCount,
-  totalCount,
-  formattedDate,
-}: Props) {
+export function SessionRouteHeader() {
+  const { session } = useSessionRoute();
   const insets = useSafeAreaInsets();
-  const progress = totalCount > 0 ? visitedCount / totalCount : 0;
-  const progressPct = Math.round(progress * 100);
+
+  const routeName = session.session?.route_name ?? "Route";
+  const { progress } = session;
+  const formattedDate = formatLongDate(session.session?.session_date);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
       <View style={styles.headerTopRow}>
         <Text style={styles.headerLabel}>TODAY'S SESSION</Text>
         <View style={styles.stopsBadge}>
-          <Text style={styles.stopsBadgeText}>{totalCount} stops</Text>
+          <Text style={styles.stopsBadgeText}>{progress.total} stops</Text>
         </View>
       </View>
       <Text style={styles.headerTitle} numberOfLines={1}>
@@ -38,14 +31,16 @@ export function SessionRouteHeader({
           </>
         ) : null}
         <Text style={styles.headerMetaText}>
-          {visitedCount} of {totalCount} done
+          {progress.visited} of {progress.total} done
         </Text>
       </View>
       <View style={styles.progressRow}>
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+          <View
+            style={[styles.progressFill, { width: `${progress.ratio * 100}%` }]}
+          />
         </View>
-        <Text style={styles.progressPct}>{progressPct}% completed</Text>
+        <Text style={styles.progressPct}>{progress.percent}% completed</Text>
       </View>
     </View>
   );

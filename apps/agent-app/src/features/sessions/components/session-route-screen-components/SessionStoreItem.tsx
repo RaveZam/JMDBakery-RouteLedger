@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { SessionStore } from "../../hooks/useSessionRoute";
+import { SessionStore } from "../../types/session-types";
 
 type Props = {
   store: SessionStore;
