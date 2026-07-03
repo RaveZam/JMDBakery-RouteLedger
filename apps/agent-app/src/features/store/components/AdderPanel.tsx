@@ -7,7 +7,7 @@ import {
   TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { PickerModal } from "./PickerModal";
+import { PickerModal } from "../../../shared/components/PickerModal";
 import type { AdderPanelProps, Product } from "../types/store-types";
 
 const HEADER_BG = "#0b4c29";
@@ -60,7 +60,12 @@ function QtyStepper({
           onPress={() => onChange(value + 1)}
           activeOpacity={0.7}
         >
-          <Text style={[stepperStyles.btnText, accent && stepperStyles.btnTextAccent]}>
+          <Text
+            style={[
+              stepperStyles.btnText,
+              accent && stepperStyles.btnTextAccent,
+            ]}
+          >
             +
           </Text>
         </TouchableOpacity>
@@ -108,15 +113,21 @@ const stepperStyles = StyleSheet.create({
   },
 });
 
-export function AdderPanel({ products, showPrice, editData, remainingByProduct, onAdd }: AdderPanelProps) {
+export function AdderPanel({
+  products,
+  showPrice,
+  editData,
+  remainingByProduct,
+  onAdd,
+}: AdderPanelProps) {
   const initProduct = editData
     ? (products.find((p) => p.id === editData.productId) ?? products[0])
     : products[0];
   const initReason = PRESET_REASONS.includes(editData?.boReason as PresetReason)
     ? (editData!.boReason as PresetReason)
     : editData?.boReason
-    ? "Custom"
-    : "Rotten";
+      ? "Custom"
+      : "Rotten";
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selected, setSelected] = useState<Product>(initProduct);
@@ -124,7 +135,7 @@ export function AdderPanel({ products, showPrice, editData, remainingByProduct, 
   const [boQty, setBoQty] = useState(editData?.boQty ?? 0);
   const [reason, setReason] = useState<PresetReason>(initReason);
   const [customReason, setCustomReason] = useState(
-    initReason === "Custom" ? (editData?.boReason ?? "") : ""
+    initReason === "Custom" ? (editData?.boReason ?? "") : "",
   );
 
   const remaining = selected ? remainingByProduct?.[selected.id] : undefined;
@@ -234,7 +245,12 @@ export function AdderPanel({ products, showPrice, editData, remainingByProduct, 
                 onPress={() => setReason(r)}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, reason === r && styles.chipTextActive]}>
+                <Text
+                  style={[
+                    styles.chipText,
+                    reason === r && styles.chipTextActive,
+                  ]}
+                >
                   {r}
                 </Text>
               </TouchableOpacity>
@@ -260,7 +276,9 @@ export function AdderPanel({ products, showPrice, editData, remainingByProduct, 
         onPress={handleAdd}
         disabled={!canAdd}
       >
-        <Text style={styles.addBtnText}>{editData ? "Save Changes" : "Add to Order"}</Text>
+        <Text style={styles.addBtnText}>
+          {editData ? "Save Changes" : "Add to Order"}
+        </Text>
         {selected && canAdd && (
           <Text style={styles.addBtnSub}>
             {selected.name}
@@ -275,7 +293,7 @@ export function AdderPanel({ products, showPrice, editData, remainingByProduct, 
         products={products}
         showPrice={showPrice}
         remainingByProduct={remainingByProduct}
-        onSelect={setSelected}
+        onSelected={setSelected}
         onClose={() => setPickerOpen(false)}
       />
     </View>
