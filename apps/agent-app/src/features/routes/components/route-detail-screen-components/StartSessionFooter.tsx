@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,15 +8,18 @@ import {
 } from "react-native";
 
 import { useStartSession } from "@/src/features/sessions/hooks/useStartSession";
+import { StartSessionModal } from "./StartSessionModal";
 
 export function StartSessionFooter(): React.JSX.Element {
   const { loading, start } = useStartSession();
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
   return (
     <View style={styles.footer}>
       <TouchableOpacity
         style={[styles.startBtn, loading && styles.startBtnDisabled]}
         activeOpacity={0.85}
-        onPress={start}
+        onPress={() => setConfirmVisible(true)}
         disabled={loading}
       >
         {loading ? (
@@ -24,6 +28,14 @@ export function StartSessionFooter(): React.JSX.Element {
           <Text style={styles.startBtnText}>Start Session</Text>
         )}
       </TouchableOpacity>
+      <StartSessionModal
+        visible={confirmVisible}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          start();
+        }}
+        onCancel={() => setConfirmVisible(false)}
+      />
     </View>
   );
 }

@@ -48,6 +48,17 @@ export const modalStyles = StyleSheet.create({
     marginBottom: 4,
   },
 
+  // Confirm (non-destructive) icon wrap
+  confirmIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#EAF6EF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+
   // Buttons
   buttons: {
     flexDirection: "row",
@@ -77,6 +88,19 @@ export const modalStyles = StyleSheet.create({
     justifyContent: "center",
   },
   deleteText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  confirmButton: {
+    flex: 1,
+    height: 44,
+    borderRadius: 999,
+    backgroundColor: "#0b4c29",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
