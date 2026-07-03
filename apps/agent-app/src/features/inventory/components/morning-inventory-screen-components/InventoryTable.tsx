@@ -1,14 +1,13 @@
+import { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import type { InventoryItem } from "@/src/lib/dao/session-inventory-dao";
 import { InventoryRow } from "./InventoryRow";
+import { InventoryAdderModal } from "./InventoryAdderModal";
+import { useMorningInventory } from "../../context/useMorningInventory";
 
-type Props = {
-  items: InventoryItem[];
-  onSetQty: (productId: string, qty: number) => void;
-  onRemove: (productId: string) => void;
-};
+export function InventoryTable() {
+  const { inventory } = useMorningInventory();
+  const [editProductId, setEditProductId] = useState<string | null>(null);
 
-export function InventoryTable({ items, onSetQty, onRemove }: Props) {
   return (
     <View style={styles.table}>
       <View style={styles.tableHeader}>
@@ -16,14 +15,19 @@ export function InventoryTable({ items, onSetQty, onRemove }: Props) {
         <Text style={[styles.colHead, styles.colHeadQty]}>QTY</Text>
         <View style={styles.colHeadDelete} />
       </View>
-      {items.map((item) => (
+      {inventory.items.map((item) => (
         <InventoryRow
           key={item.inventoryId}
           item={item}
-          onSetQty={onSetQty}
-          onRemove={onRemove}
+          onEdit={() => setEditProductId(item.productId)}
         />
       ))}
+      <InventoryAdderModal
+        visible={editProductId !== null}
+        onClose={() => setEditProductId(null)}
+        editing={true}
+        editProductId={editProductId}
+      />
     </View>
   );
 }

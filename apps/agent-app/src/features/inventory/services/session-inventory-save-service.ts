@@ -10,7 +10,10 @@ type AddInventoryInput = {
   qty: number;
 };
 
-export function updateMorningInventoryQty(inventoryId: string, qty: number): void {
+export function updateMorningInventoryQty(
+  inventoryId: string,
+  qty: number,
+): void {
   getDb().withTransactionSync(() => {
     SessionInventoryDao.updateQuantity(inventoryId, qty);
     enqueueOutbox({

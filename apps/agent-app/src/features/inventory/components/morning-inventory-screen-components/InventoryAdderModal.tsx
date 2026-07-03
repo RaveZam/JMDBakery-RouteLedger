@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,22 +10,49 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { PickerModal } from "@/src/features/store/components/PickerModal";
-import { useSetMorningInventory } from "../../hooks/useSetMorningInventory";
+import { PickerModal } from "@/src/shared/components/PickerModal";
+import { useMorningInventory } from "../../context/useMorningInventory";
 
 const HEADER_BG = "#0b4c29";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onAdded?: () => void;
+  editing: boolean;
+  editProductId?: string | null;
 };
 
-export function InventoryAdderModal({ visible, onClose, onAdded }: Props) {
+export function InventoryAdderModal({
+  visible,
+  onClose,
+  editing,
+  editProductId,
+}: Props) {
+  const { inventory } = useMorningInventory();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const { products } = useSetMorningInventory();
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
+  const [qty, setQty] = useState(1);
 
-  const canAdd = !!products.selected && products.qty > 0;
+  // Seed selection + qty each time the sheet opens: an edit sheet starts on the
+  // row's product and its stored qty; an add sheet starts empty.
+  useEffect(() => {
+    if (!visible) return;
+    if (editing) {
+      setSelectedProductId(editProductId ?? null);
+      const item = inventory.items.find((it) => it.productId === editProductId);
+      setQty(item?.qty ?? 1);
+    } else {
+      setSelectedProductId(null);
+      setQty(1);
+    }
+  }, [visible, editing, editProductId, inventory.items]);
+
+  const selectedProduct = inventory.products.find(
+    (p) => p.id === selectedProductId,
+  );
+  const canAdd = selectedProduct && qty > 0;
 
   return (
     <Modal
@@ -49,7 +76,9 @@ export function InventoryAdderModal({ visible, onClose, onAdded }: Props) {
             <View style={styles.handle} />
           </View>
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Add Product</Text>
+            <Text style={styles.sheetTitle}>
+              {editing ? "Edit Product" : "Add Product"}
+            </Text>
             <TouchableOpacity
               style={styles.closeBtn}
               onPress={onClose}
@@ -67,7 +96,7 @@ export function InventoryAdderModal({ visible, onClose, onAdded }: Props) {
               activeOpacity={0.8}
             >
               <Text style={styles.dropdownText} numberOfLines={1}>
-                {products.selected?.name ?? "Select product"}
+                {selectedProduct?.name ?? "Select product"}
               </Text>
               <Ionicons name="chevron-down" size={16} color="#64748B" />
             </TouchableOpacity>
@@ -77,7 +106,7 @@ export function InventoryAdderModal({ visible, onClose, onAdded }: Props) {
               <View style={styles.stepperRow}>
                 <TouchableOpacity
                   style={styles.stepBtn}
-                  onPress={() => products.setQty((q) => Math.max(1, q - 1))}
+                  onPress={() => setQty((q) => Math.max(1, q - 1))}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.stepBtnText}>−</Text>
@@ -85,16 +114,16 @@ export function InventoryAdderModal({ visible, onClose, onAdded }: Props) {
                 <TextInput
                   style={styles.stepValue}
                   keyboardType="number-pad"
-                  value={String(products.qty)}
+                  value={String(qty)}
                   onChangeText={(v) => {
                     const n = parseInt(v, 10);
-                    products.setQty(isNaN(n) || n < 1 ? 1 : n);
+                    setQty(isNaN(n) || n < 1 ? 1 : n);
                   }}
                   selectTextOnFocus
                 />
                 <TouchableOpacity
                   style={styles.stepBtn}
-                  onPress={() => products.setQty((q) => q + 1)}
+                  onPress={() => setQty((q) => q + 1)}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.stepBtnText}>+</Text>
@@ -107,20 +136,22 @@ export function InventoryAdderModal({ visible, onClose, onAdded }: Props) {
               activeOpacity={0.85}
               disabled={!canAdd}
               onPress={() => {
-                products.save();
-                onAdded?.();
+                if (!selectedProductId) return;
+                inventory.setItemQty(selectedProductId, qty);
                 onClose();
               }}
             >
-              <Text style={styles.confirmAddText}>Add to Inventory</Text>
+              <Text style={styles.confirmAddText}>
+                {editing ? "Update" : "Add to Inventory"}
+              </Text>
             </TouchableOpacity>
           </View>
 
           <PickerModal
             visible={pickerOpen}
-            products={products.products}
-            showPrice={false}
-            onSelect={products.setSelected}
+            products={inventory.products}
+            showPrice={true}
+            onSelected={(p) => setSelectedProductId(p.id)}
             onClose={() => setPickerOpen(false)}
           />
         </KeyboardAvoidingView>

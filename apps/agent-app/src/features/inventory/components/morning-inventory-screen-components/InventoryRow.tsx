@@ -1,23 +1,24 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { InventoryItem } from "@/src/lib/dao/session-inventory-dao";
+import { useMorningInventory } from "../../context/useMorningInventory";
 
 type Props = {
   item: InventoryItem;
-  onSetQty: (productId: string, qty: number) => void;
-  onRemove: (productId: string) => void;
+  onEdit: () => void;
 };
 
-export function InventoryRow({ item, onSetQty, onRemove }: Props) {
+export function InventoryRow({ item, onEdit }: Props) {
+  const { inventory } = useMorningInventory();
   return (
-    <View style={styles.row}>
+    <TouchableOpacity onPress={onEdit} style={styles.row} activeOpacity={0.7}>
       <Text style={styles.rowProduct} numberOfLines={1}>
         {item.productName}
       </Text>
       <View style={styles.qtyControls}>
         <TouchableOpacity
           style={styles.qtyBtn}
-          onPress={() => onSetQty(item.productId, item.qty - 1)}
+          onPress={() => inventory.adjustItemQty(item.productId, -1)}
           activeOpacity={0.7}
         >
           <Text style={styles.qtyBtnText}>−</Text>
@@ -25,7 +26,7 @@ export function InventoryRow({ item, onSetQty, onRemove }: Props) {
         <Text style={styles.qtyValue}>{item.qty}</Text>
         <TouchableOpacity
           style={styles.qtyBtn}
-          onPress={() => onSetQty(item.productId, item.qty + 1)}
+          onPress={() => inventory.adjustItemQty(item.productId, 1)}
           activeOpacity={0.7}
         >
           <Text style={styles.qtyBtnText}>+</Text>
@@ -33,12 +34,12 @@ export function InventoryRow({ item, onSetQty, onRemove }: Props) {
       </View>
       <TouchableOpacity
         style={styles.deleteBtn}
-        onPress={() => onRemove(item.productId)}
+        onPress={() => inventory.removeItem(item.productId)}
         hitSlop={8}
       >
         <Ionicons name="trash-outline" size={16} color="#DC2626" />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 
