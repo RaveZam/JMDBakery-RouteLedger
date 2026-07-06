@@ -32,6 +32,13 @@ const RouteSessionsDao = {
     );
   },
 
+  cancel(id: string) {
+    getDb().runSync(
+      `UPDATE route_sessions SET status = 'cancelled' WHERE id = ?`,
+      [id],
+    );
+  },
+
   markInventoryFinished(id: string) {
     getDb().runSync(
       `UPDATE route_sessions SET morning_inventory_finished = 1 WHERE id = ?`,
@@ -41,7 +48,7 @@ const RouteSessionsDao = {
 
   getOngoing() {
     return getDb().getFirstSync<RouteSessionRow>(
-      `SELECT * FROM route_sessions WHERE status = 'ongoing' `,
+      `SELECT * FROM route_sessions WHERE status = 'ongoing' ORDER BY created_at DESC LIMIT 1`,
     );
   },
 
