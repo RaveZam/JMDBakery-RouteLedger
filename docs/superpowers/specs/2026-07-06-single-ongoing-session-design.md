@@ -63,7 +63,20 @@ No resume/cancel action offered from this prompt (hard block).
 - `SessionRouteScreen` surfaces a "Cancel session" action (with a confirmation
   Alert, since it discards the session).
 
-### 3. DB-level guardrail
+### 3. DB reset + schema (bump filename to v4)
+
+Existing installs have `route_sessions.status CHECK(status IN ('ongoing',
+'completed'))` baked in, and SQLite cannot alter a CHECK in place. Per the
+codebase's sanctioned reset strategy (CLAUDE.md: "bump the DB filename to
+reset"), rename the DB file `routeledger-v3.db` → `routeledger-v4.db` in
+`getDb()`. This starts every install from a fresh schema with zero sessions,
+which also eliminates the accumulated duplicate ongoing rows outright — no
+cleanup pass needed. Server-owned data (`products`) re-pulls via download sync.
+
+In the fresh `CREATE TABLE route_sessions`, widen the CHECK to include the new
+value: `CHECK(status IN ('ongoing', 'completed', 'cancelled'))`.
+
+### 4. DB-level guardrail
 
 Add a partial unique index in `initDb()` (`src/lib/db.ts`) so the invariant
 cannot be violated even by a future bug:
@@ -73,38 +86,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_route_sessions_one_ongoing
   ON route_sessions (status) WHERE status = 'ongoing';
 ```
 
-SQLite supports partial indexes. The index creation runs after the cleanup step
-(below) so it does not fail on existing duplicate rows.
+SQLite supports partial indexes. With a fresh v4 DB there are no pre-existing
+duplicates, so the index always creates cleanly.
 
-### 4. Deterministic `getOngoing()`
+### 5. Deterministic `getOngoing()`
 
 Defense-in-depth: `SELECT * FROM route_sessions WHERE status='ongoing'
 ORDER BY created_at DESC LIMIT 1`. Even if the invariant is somehow violated,
 the most recent session wins.
 
-### 5. One-time cleanup of existing duplicates
-
-Before creating the unique index, collapse existing duplicate ongoing rows so the
-index can be created and the correct session is restored. In `initDb()`, prior to
-the index creation:
-
-```sql
-UPDATE route_sessions SET status = 'cancelled'
-WHERE status = 'ongoing'
-  AND id NOT IN (
-    SELECT id FROM route_sessions WHERE status = 'ongoing'
-    ORDER BY created_at DESC LIMIT 1
-  );
-```
-
-This keeps the newest ongoing session and cancels the rest. Idempotent — a no-op
-once at most one ongoing row remains. (These cancellations are local-only cleanup
-and are not enqueued to the outbox, since the stale rows were test data that was
-never the true active session.)
-
 ## Files touched
 
-- `src/lib/db.ts` — cleanup UPDATE + partial unique index in `initDb()`.
+- `src/lib/db.ts` — bump DB filename to v4, widen status CHECK, partial unique
+  index in `initDb()`.
 - `src/lib/dao/route-sessions-dao.ts` — `cancel(id)`; deterministic `getOngoing()`.
 - `src/features/sessions/services/sessionLocalService.ts` — ongoing guard in
   `startSession`; new `cancelSession`.
@@ -117,8 +111,6 @@ never the true active session.)
 - **core / DAO (integration DB test):** starting a second session while one is
   ongoing is rejected; `getOngoing` returns the newest; `cancel` frees the slot
   so a new session can start; unique index rejects a second ongoing insert.
-- **cleanup:** given N ongoing rows, `initDb` leaves exactly one (the newest)
-  ongoing, rest cancelled.
 - **hook/UI:** `useStartSession` surfaces the block message when guard trips.
 
 ## Out of scope
