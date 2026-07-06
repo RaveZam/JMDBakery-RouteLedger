@@ -4,7 +4,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 
 export function getDb(): SQLite.SQLiteDatabase {
   if (!db) {
-    db = SQLite.openDatabaseSync("routeledger-v3.db");
+    db = SQLite.openDatabaseSync("routeledger-v4.db");
   }
   return db;
 }
@@ -42,7 +42,7 @@ export async function initDb(): Promise<void> {
       route_name                  TEXT NOT NULL,
       session_date                TEXT NOT NULL,
       conducted_by                TEXT NOT NULL,
-      status                      TEXT NOT NULL DEFAULT 'ongoing' CHECK(status IN ('ongoing', 'completed')),
+      status                      TEXT NOT NULL DEFAULT 'ongoing' CHECK(status IN ('ongoing', 'completed', 'cancelled')),
       morning_inventory_finished  INTEGER NOT NULL DEFAULT 0,
       created_at                  TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -114,6 +114,7 @@ export async function initDb(): Promise<void> {
     CREATE INDEX IF NOT EXISTS session_inventory_session_idx ON session_inventory(route_session_id);
     CREATE INDEX IF NOT EXISTS ending_inventory_session_idx ON ending_inventory(route_session_id);
     CREATE INDEX IF NOT EXISTS outbox_pending_idx ON outbox(synced_at) WHERE synced_at IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_route_sessions_one_ongoing ON route_sessions(status) WHERE status = 'ongoing';
   `);
 
   // Column-level migrations for existing installs
