@@ -1,7 +1,10 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import { router } from "expo-router";
-import { startSession } from "../../services/sessionLocalService";
+import {
+  startSession,
+  OngoingSessionExistsError,
+} from "../../services/sessionLocalService";
 import { useStartSession } from "../useStartSession";
 
 jest.mock("expo-router", () => ({
@@ -9,9 +12,10 @@ jest.mock("expo-router", () => ({
   router: { replace: jest.fn() },
 }));
 
-jest.mock("../../services/sessionLocalService", () => ({
-  startSession: jest.fn(),
-}));
+jest.mock("../../services/sessionLocalService", () => {
+  const actual = jest.requireActual("../../services/sessionLocalService");
+  return { ...actual, startSession: jest.fn() };
+});
 
 const mockReplace = jest.mocked(router.replace);
 const mockStartSession = jest.mocked(startSession);
@@ -57,6 +61,19 @@ test("shows alert when not authenticated", async () => {
     "Couldn't start session",
     "Error: User not authenticated",
   );
+});
+
+test("shows the hard-block alert and does not navigate when a session is ongoing", async () => {
+  mockStartSession.mockRejectedValue(new OngoingSessionExistsError());
+
+  const { result } = renderHook(() => useStartSession());
+  await act(async () => { await result.current.start(); });
+
+  expect(Alert.alert).toHaveBeenCalledWith(
+    "Session already running",
+    expect.stringContaining("Cancel"),
+  );
+  expect(mockReplace).not.toHaveBeenCalled();
 });
 
 test("does nothing when routeId is missing", async () => {
