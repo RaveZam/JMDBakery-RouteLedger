@@ -9,7 +9,7 @@ const BORDER = "#E2E8F0";
 
 export function ProductSelector() {
   const { adderModal } = useProductQuantity();
-  const [selected, setSelected] = useState<Product | null>(null);
+
   const [listOpen, setListOpen] = useState(false);
 
   return (
@@ -22,7 +22,7 @@ export function ProductSelector() {
       >
         <View style={styles.productDropdownInner}>
           <Text style={styles.productName} numberOfLines={1}>
-            {selected?.name ?? "Select product"}
+            {adderModal.inventory.selectedProduct?.name ?? "Select product"}
           </Text>
         </View>
         <View style={styles.productChevron}>
@@ -30,9 +30,12 @@ export function ProductSelector() {
         </View>
       </TouchableOpacity>
 
-      {selected && (
+      {adderModal.inventory.selectedProduct && (
         <Text style={styles.remainingLabel}>
-          {adderModal.inventory.remaining[selected.id] ?? 0} left
+          {adderModal.inventory.remaining[
+            adderModal.inventory.selectedProduct.id
+          ] ?? 0}{" "}
+          left
         </Text>
       )}
 
@@ -53,7 +56,7 @@ export function ProductSelector() {
                 key={product.id}
                 style={styles.listRow}
                 onPress={() => {
-                  setSelected(product);
+                  adderModal.inventory.setSelectedProduct(product);
                   setListOpen(false);
                 }}
               >

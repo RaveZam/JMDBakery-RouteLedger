@@ -10,11 +10,9 @@ export function AdderPanel() {
   return (
     <View style={styles.panel}>
       <ProductSelector />
-
       <View style={styles.stepperSection}>
         <QtyStepper />
       </View>
-
       <View style={styles.sectionDivider}>
         <View style={styles.dividerLine} />
         <Text style={styles.dividerLabel}>Bad Order</Text>

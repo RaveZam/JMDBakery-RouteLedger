@@ -1,13 +1,16 @@
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useProductQuantity } from "../../context/useProductQuantity";
 
 const HEADER_BG = "#0b4c29";
 
 export function AddButton() {
+  const { adderModal } = useProductQuantity();
+
   return (
     <TouchableOpacity
       style={styles.addBtn}
       activeOpacity={0.85}
-      onPress={() => {}}
+      onPress={() => adderModal.inventory.addOrder()}
     >
       <Text style={styles.addBtnText}>Add to Order</Text>
     </TouchableOpacity>

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -6,11 +5,12 @@ import {
   TouchableOpacity,
   TextInput,
 } from "react-native";
+import { useProductQuantity } from "../../context/useProductQuantity";
 
 const BORDER = "#E2E8F0";
 
 export function QtyStepper() {
-  const [value, setValue] = useState(0);
+  const { adderModal } = useProductQuantity();
 
   return (
     <View style={styles.wrap}>
@@ -18,7 +18,9 @@ export function QtyStepper() {
       <View style={styles.row}>
         <TouchableOpacity
           style={styles.btn}
-          onPress={() => setValue((v) => Math.max(0, v - 1))}
+          onPress={() =>
+            adderModal.inventory.setQuantity((v) => Math.max(0, v - 1))
+          }
           activeOpacity={0.7}
         >
           <Text style={styles.btnText}>−</Text>
@@ -27,17 +29,17 @@ export function QtyStepper() {
         <TextInput
           style={styles.value}
           keyboardType="number-pad"
-          value={String(value)}
+          value={String(adderModal.inventory.quantity)}
           onChangeText={(v) => {
             const n = parseInt(v, 10);
-            setValue(isNaN(n) || n < 0 ? 0 : n);
+            adderModal.inventory.setQuantity(isNaN(n) || n < 0 ? 0 : n);
           }}
           selectTextOnFocus
         />
 
         <TouchableOpacity
           style={styles.btn}
-          onPress={() => setValue((v) => v + 1)}
+          onPress={() => adderModal.inventory.setQuantity((v) => v + 1)}
           activeOpacity={0.7}
         >
           <Text style={styles.btnText}>+</Text>
