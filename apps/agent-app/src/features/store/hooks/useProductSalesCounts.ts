@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { getSalesBySessionStore } from "../services/sales-services";
 import {
@@ -11,10 +11,14 @@ export function useProductSalesCounts(sessionStoreId: string) {
     Record<string, ProductSalesCount>
   >({});
 
-  useEffect(() => {
+  const refetchSalesCounts = useCallback(() => {
     if (!sessionStoreId) return;
     setSalesCounts(countSoldByProduct(getSalesBySessionStore(sessionStoreId)));
   }, [sessionStoreId]);
 
-  return { salesCounts };
+  useEffect(() => {
+    refetchSalesCounts();
+  }, [refetchSalesCounts]);
+
+  return { salesCounts, refetchSalesCounts };
 }
