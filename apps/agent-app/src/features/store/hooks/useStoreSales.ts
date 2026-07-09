@@ -15,6 +15,7 @@ import {
 } from "../core/count-sold-by-product";
 import { computeRemaining } from "../core/compute-remaining";
 import { validateSaleInput } from "../core/validate-sale-input";
+import { hasEnoughStock } from "../core/has-enough-stock";
 import {
   addSale,
   getSalesByRouteSession,
@@ -54,6 +55,10 @@ export function useStoreSales() {
 
   const [soldItems, setSoldItems] = useState<LoggedItem[]>([]);
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+  const [editingOriginal, setEditingOriginal] = useState<{
+    qty: number;
+    boQty: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!sessionStoreId || !sessionId) return;
@@ -95,12 +100,27 @@ export function useStoreSales() {
     setBoReason("");
     setBoReasonType(null);
     setEditingSaleId(null);
+    setEditingOriginal(null);
   };
 
   const addOrder = () => {
     if (!sessionStoreId || !selectedProduct) return;
     const { valid } = validateSaleInput({ qty: quantity, boQty, boReason });
     if (!valid) return;
+
+    const enough = hasEnoughStock({
+      qty: quantity,
+      boQty,
+      remaining: remaining[selectedProduct.id] ?? 0,
+      editingOriginal: editingOriginal ?? undefined,
+    });
+    if (!enough) {
+      Alert.alert(
+        "Not enough stock",
+        `Not enough ${selectedProduct.name} left to log this order.`,
+      );
+      return;
+    }
 
     const saleInput = {
       sessionStoreId,
@@ -146,6 +166,7 @@ export function useStoreSales() {
           : null,
     );
     setEditingSaleId(item.saleId);
+    setEditingOriginal({ qty: item.qty, boQty: item.boQty });
     setVisible(true);
   };
 
