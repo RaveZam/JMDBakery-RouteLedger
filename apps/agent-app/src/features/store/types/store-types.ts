@@ -70,8 +70,3 @@ export type OrdersSectionProps = {
   onItemPress: (idx: number) => void;
   onDeleteItem: (idx: number) => void;
 };
-
-export type VisitFooterProps = {
-  netTotal: number;
-  onConfirm: () => void;
-};

@@ -1,23 +1,26 @@
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
-import type { VisitFooterProps } from "../types/store-types";
+import { useStoreDetails } from "../hooks/useStoreDetails";
+import { useNetTotal } from "../hooks/useNetTotal";
+import { useProductQuantity } from "../context/useProductQuantity";
 
 const HEADER_BG = "#0b4c29";
 const CARD_BG = "#FFFFFF";
 const BORDER = "#E2E8F0";
 
-export function VisitFooter({ netTotal, onConfirm }: VisitFooterProps) {
+export function VisitFooter() {
+  const { adderModal } = useProductQuantity();
+  const { confirmVisit } = useStoreDetails();
+  const netTotal = useNetTotal(adderModal.inventory.soldItems);
   return (
     <View style={styles.footer}>
       <View style={styles.summaryRow}>
         <Text style={styles.summaryNetLabel}>Net total</Text>
-        <Text style={styles.summaryNetValue}>
-          ₱{netTotal.toLocaleString()}
-        </Text>
+        <Text style={styles.summaryNetValue}>₱{netTotal.toLocaleString()}</Text>
       </View>
       <TouchableOpacity
         style={styles.confirmBtn}
         activeOpacity={0.8}
-        onPress={onConfirm}
+        onPress={confirmVisit}
       >
         <Text style={styles.confirmBtnText}>Confirm visit</Text>
       </TouchableOpacity>

@@ -9,8 +9,6 @@ const HEADER_BG = "#0b4c29";
 const BODY_BG = "#F0F0EB";
 
 export default function StorePage() {
-  let netTotal = 0;
-  let confirmVisit = () => {};
   return (
     <SafeAreaView style={styles.safeArea} edges={["left", "right", "bottom"]}>
       <StoreHeader />
@@ -22,7 +20,7 @@ export default function StorePage() {
         <OrdersSection />
         <AdderModal />
       </ScrollView>
-      <VisitFooter netTotal={netTotal} onConfirm={confirmVisit} />
+      <VisitFooter />
     </SafeAreaView>
   );
 }
