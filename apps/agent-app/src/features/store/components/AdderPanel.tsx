@@ -10,14 +10,10 @@ const BORDER = "#E2E8F0";
 export function AdderPanel() {
   const { adderModal } = useProductQuantity();
 
-  const hasSelectedProduct = !!adderModal.inventory.selectedProduct;
-  const needsReason =
-    adderModal.inventory.boQty > 0 && !adderModal.inventory.boReason;
-
   return (
     <View style={styles.panel}>
       <ProductSelector />
-      {hasSelectedProduct && (
+      {!!adderModal.inventory.selectedProduct && (
         <>
           <View style={styles.stepperSection}>
             <QtyStepper
@@ -36,7 +32,7 @@ export function AdderPanel() {
               value={adderModal.inventory.boQty}
               onChange={adderModal.inventory.setBoQty}
             />
-            {needsReason && (
+            {adderModal.inventory.needsReason && (
               <Text style={styles.reasonWarning}>Reason required</Text>
             )}
           </View>

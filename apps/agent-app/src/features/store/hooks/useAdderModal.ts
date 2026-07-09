@@ -2,9 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 import SessionInventoryDao from "@/src/lib/dao/session-inventory-dao";
 import { ProductsDao } from "@/src/lib/dao/products-dao";
-import type { LoggedItem, Product } from "../types/store-types";
+import {
+  PRESET_REASONS,
+  type LoggedItem,
+  type PresetReason,
+  type Product,
+} from "../types/store-types";
 import { useLocalSearchParams } from "expo-router";
-import { useProductSalesCounts } from "./useProductSalesCounts";
+import {
+  countSoldByProduct,
+  type ProductSalesCount,
+} from "../core/count-sold-by-product";
+import { computeRemaining } from "../core/compute-remaining";
+import { validateSaleInput } from "../core/validate-sale-input";
 import {
   addSale,
   getSalesBySessionStore,
@@ -21,15 +31,25 @@ export function useAdderModal() {
   const [products, setProducts] = useState<Product[]>([]);
 
   //Sales Count holds simply the amount of X product sold, Remaining is derived from taking the session inventory - amount sold of the product_id
-  const { salesCounts, refetchSalesCounts } = useProductSalesCounts(
-    sessionStoreId ?? "",
-  );
-  const [remaining, setRemaining] = useState<Record<string, number>>({});
+  const [salesCounts, setSalesCounts] = useState<
+    Record<string, ProductSalesCount>
+  >({});
 
+  const refetchSalesCounts = useCallback(() => {
+    if (!sessionStoreId) return;
+    setSalesCounts(countSoldByProduct(getSalesBySessionStore(sessionStoreId)));
+  }, [sessionStoreId]);
+
+  useEffect(() => {
+    refetchSalesCounts();
+  }, [refetchSalesCounts]);
+
+  const [remaining, setRemaining] = useState<Record<string, number>>({});
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(0);
   const [boQty, setBoQty] = useState(0);
   const [boReason, setBoReason] = useState("");
+  const [boReasonType, setBoReasonType] = useState<PresetReason | null>(null);
 
   const [soldItems, setSoldItems] = useState<LoggedItem[]>([]);
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
@@ -50,14 +70,7 @@ export function useAdderModal() {
         price: priceById.get(item.productId) ?? 0,
       })),
     );
-    setRemaining(
-      Object.fromEntries(
-        items.map((item) => [
-          item.productId,
-          item.qty - (salesCounts[item.productId]?.sold ?? 0),
-        ]),
-      ),
-    );
+    setRemaining(computeRemaining(items, salesCounts));
   }, [visible, sessionId, sessionStoreId, salesCounts]);
 
   const reloadSoldItems = useCallback(() => {
@@ -69,18 +82,24 @@ export function useAdderModal() {
     reloadSoldItems();
   }, [reloadSoldItems]);
 
+  const selectReason = (reason: PresetReason) => {
+    setBoReasonType(reason);
+    setBoReason(reason === "Custom" ? "" : reason);
+  };
+
   const resetForm = () => {
     setSelectedProduct(null);
     setQuantity(0);
     setBoQty(0);
     setBoReason("");
+    setBoReasonType(null);
     setEditingSaleId(null);
   };
 
   const addOrder = () => {
     if (!sessionStoreId || !selectedProduct) return;
-    if (quantity <= 0 && boQty <= 0) return;
-    if (boQty > 0 && !boReason) return;
+    const { valid } = validateSaleInput({ qty: quantity, boQty, boReason });
+    if (!valid) return;
 
     const saleInput = {
       sessionStoreId,
@@ -118,6 +137,13 @@ export function useAdderModal() {
     setQuantity(item.qty);
     setBoQty(item.boQty);
     setBoReason(item.boReason ?? "");
+    setBoReasonType(
+      item.boReason && PRESET_REASONS.includes(item.boReason as PresetReason)
+        ? (item.boReason as PresetReason)
+        : item.boReason
+          ? "Custom"
+          : null,
+    );
     setEditingSaleId(item.saleId);
     setVisible(true);
   };
@@ -144,6 +170,8 @@ export function useAdderModal() {
     );
   };
 
+  const { needsReason } = validateSaleInput({ qty: quantity, boQty, boReason });
+
   return {
     inventory: {
       soldItems,
@@ -156,11 +184,14 @@ export function useAdderModal() {
       setBoQty,
       boReason,
       setBoReason,
+      boReasonType,
+      selectReason,
       salesCounts,
       remaining,
       visible,
       products,
       editingSaleId,
+      needsReason,
       open: () => setVisible(true),
       close: () => {
         setVisible(false);

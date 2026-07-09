@@ -4,6 +4,9 @@ export type Product = {
   price: number;
 };
 
+export const PRESET_REASONS = ["Rotten", "Damaged", "Lost", "Custom"] as const;
+export type PresetReason = (typeof PRESET_REASONS)[number];
+
 export type SessionStoreDetails = {
   id: string;
   route_session_id: string;

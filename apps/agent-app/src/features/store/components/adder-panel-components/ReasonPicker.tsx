@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,20 +6,12 @@ import {
   TextInput,
 } from "react-native";
 import { useProductQuantity } from "../../context/useProductQuantity";
+import { PRESET_REASONS } from "../../types/store-types";
 
 const BORDER = "#E2E8F0";
 
-export const PRESET_REASONS = ["Rotten", "Damaged", "Lost", "Custom"] as const;
-export type PresetReason = (typeof PRESET_REASONS)[number];
-
 export function ReasonPicker() {
   const { adderModal } = useProductQuantity();
-  const [reason, setReason] = useState<PresetReason | null>(null);
-  const [customReason, setCustomReason] = useState("");
-
-  const setBoReason = (preset: PresetReason, custom: string) => {
-    adderModal.inventory.setBoReason(preset === "Custom" ? custom : preset);
-  };
 
   if (adderModal.inventory.boQty === 0) return null;
 
@@ -31,31 +22,34 @@ export function ReasonPicker() {
         {PRESET_REASONS.map((r) => (
           <TouchableOpacity
             key={r}
-            style={[styles.chip, reason === r && styles.chipActive]}
+            style={[
+              styles.chip,
+              adderModal.inventory.boReasonType === r && styles.chipActive,
+            ]}
             onPress={() => {
-              setReason(r);
-              setBoReason(r, customReason);
+              adderModal.inventory.selectReason(r);
             }}
             activeOpacity={0.7}
           >
             <Text
-              style={[styles.chipText, reason === r && styles.chipTextActive]}
+              style={[
+                styles.chipText,
+                adderModal.inventory.boReasonType === r &&
+                  styles.chipTextActive,
+              ]}
             >
               {r}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-      {reason === "Custom" && (
+      {adderModal.inventory.boReasonType === "Custom" && (
         <TextInput
           style={styles.customInput}
           placeholder="Describe the reason…"
           placeholderTextColor="#94A3B8"
-          value={customReason}
-          onChangeText={(v) => {
-            setCustomReason(v);
-            setBoReason("Custom", v);
-          }}
+          value={adderModal.inventory.boReason}
+          onChangeText={adderModal.inventory.setBoReason}
           autoFocus
         />
       )}
