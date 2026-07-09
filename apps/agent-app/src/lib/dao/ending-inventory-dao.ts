@@ -30,18 +30,20 @@ const EndingInventoryDao = {
     }));
   },
 
-  upsert(
-    sessionId: string,
-    productId: string,
-    snapshotName: string,
-    quantity: number,
-    id: string = generateUUID(),
-  ) {
+  upsert(input: {
+    sessionId: string;
+    productId: string;
+    snapshotName: string;
+    quantity: number;
+    createdAt: string;
+    id?: string;
+  }) {
+    const id = input.id ?? generateUUID();
     getDb().runSync(
-      `INSERT INTO ending_inventory (id, route_session_id, product_id, snapshot_product_name, quantity)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO ending_inventory (id, route_session_id, product_id, snapshot_product_name, quantity, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(route_session_id, product_id) DO UPDATE SET quantity = excluded.quantity`,
-      [id, sessionId, productId, snapshotName, quantity],
+      [id, input.sessionId, input.productId, input.snapshotName, input.quantity, input.createdAt],
     );
     return id;
   },

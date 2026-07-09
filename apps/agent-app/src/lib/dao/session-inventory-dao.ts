@@ -52,16 +52,18 @@ const SessionInventoryDao = {
     return map;
   },
 
-  insert(
-    sessionId: string,
-    productId: string,
-    snapshotName: string,
-    quantity: number,
-    id: string = generateUUID(),
-  ) {
+  insert(input: {
+    sessionId: string;
+    productId: string;
+    snapshotName: string;
+    quantity: number;
+    createdAt: string;
+    id?: string;
+  }) {
+    const id = input.id ?? generateUUID();
     getDb().runSync(
-      `INSERT INTO session_inventory (id, route_session_id, product_id, snapshot_product_name, quantity) VALUES (?, ?, ?, ?, ?)`,
-      [id, sessionId, productId, snapshotName, quantity],
+      `INSERT INTO session_inventory (id, route_session_id, product_id, snapshot_product_name, quantity, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, input.sessionId, input.productId, input.snapshotName, input.quantity, input.createdAt],
     );
     return id;
   },

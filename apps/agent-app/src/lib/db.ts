@@ -4,7 +4,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 
 export function getDb(): SQLite.SQLiteDatabase {
   if (!db) {
-    db = SQLite.openDatabaseSync("routeledger-v5.db");
+    db = SQLite.openDatabaseSync("routeledger-v6.db");
   }
   return db;
 }
@@ -44,7 +44,7 @@ export async function initDb(): Promise<void> {
       conducted_by                TEXT NOT NULL,
       status                      TEXT NOT NULL DEFAULT 'ongoing' CHECK(status IN ('ongoing', 'completed', 'cancelled')),
       morning_inventory_finished  INTEGER NOT NULL DEFAULT 0,
-      created_at                  TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at                  TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS session_stores (
@@ -53,7 +53,7 @@ export async function initDb(): Promise<void> {
       store_id         TEXT NOT NULL,
       province_id      TEXT,
       visited          INTEGER NOT NULL DEFAULT 0,
-      created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at       TEXT NOT NULL,
       UNIQUE(route_session_id, store_id)
     );
 
@@ -73,7 +73,7 @@ export async function initDb(): Promise<void> {
       quantity_bo      INTEGER NOT NULL DEFAULT 0,
       bo_reason        TEXT,
       total            REAL GENERATED ALWAYS AS (snapshot_price * quantity_sold) VIRTUAL,
-      created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at       TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS session_inventory (
@@ -82,7 +82,7 @@ export async function initDb(): Promise<void> {
       product_id            TEXT NOT NULL,
       snapshot_product_name TEXT NOT NULL,
       quantity              INTEGER NOT NULL DEFAULT 0,
-      created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at            TEXT NOT NULL,
       UNIQUE(route_session_id, product_id)
     );
 
@@ -92,7 +92,7 @@ export async function initDb(): Promise<void> {
       product_id            TEXT NOT NULL,
       snapshot_product_name TEXT NOT NULL,
       quantity              INTEGER NOT NULL DEFAULT 0,
-      created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at            TEXT NOT NULL,
       UNIQUE(route_session_id, product_id)
     );
 

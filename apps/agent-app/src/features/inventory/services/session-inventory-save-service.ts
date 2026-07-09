@@ -2,6 +2,7 @@ import { getDb } from "@/src/lib/db";
 import { generateUUID } from "@/src/lib/uuid";
 import SessionInventoryDao from "@/src/lib/dao/session-inventory-dao";
 import { enqueueOutbox } from "@/src/lib/sync/outbox";
+import { getPhTime } from "@/src/shared/helpers/getPhTime";
 
 type AddInventoryInput = {
   sessionId: string;
@@ -39,14 +40,16 @@ export function removeMorningInventoryItem(inventoryId: string): void {
 
 export function addMorningInventoryItem(input: AddInventoryInput): void {
   const id = generateUUID();
+  const createdAt = getPhTime().toISOString();
   getDb().withTransactionSync(() => {
-    SessionInventoryDao.insert(
-      input.sessionId,
-      input.productId,
-      input.productName,
-      input.qty,
+    SessionInventoryDao.insert({
+      sessionId: input.sessionId,
+      productId: input.productId,
+      snapshotName: input.productName,
+      quantity: input.qty,
+      createdAt,
       id,
-    );
+    });
     enqueueOutbox({
       entityType: "session_inventory",
       entityId: id,
@@ -57,6 +60,7 @@ export function addMorningInventoryItem(input: AddInventoryInput): void {
         product_id: input.productId,
         snapshot_product_name: input.productName,
         quantity: input.qty,
+        created_at: createdAt,
       },
     });
   });

@@ -11,12 +11,13 @@ type InsertRouteSessionInput = {
 
 // Must be called inside a withTransactionSync block — has no transaction of its own.
 export function insertRouteSession(input: InsertRouteSessionInput): void {
-  RouteSessionsDao.insert(
-    input.routeName,
-    input.sessionDate,
-    input.conductedBy,
-    input.sessionId,
-  );
+  RouteSessionsDao.insert({
+    routeName: input.routeName,
+    sessionDate: input.sessionDate,
+    conductedBy: input.conductedBy,
+    createdAt: input.createdAt,
+    id: input.sessionId,
+  });
   enqueueOutbox({
     entityType: "route_session",
     entityId: input.sessionId,

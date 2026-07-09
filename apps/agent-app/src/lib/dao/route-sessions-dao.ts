@@ -12,37 +12,41 @@ export type RouteSessionRow = {
 };
 
 const RouteSessionsDao = {
-  insert(
-    routeName: string,
-    sessionDate: string,
-    conductedBy: string,
-    id: string = generateUUID(),
-  ): string {
+  insert(input: {
+    routeName: string;
+    sessionDate: string;
+    conductedBy: string;
+    createdAt: string;
+    id?: string;
+  }): string {
+    const id = input.id ?? generateUUID();
     getDb().runSync(
-      `INSERT INTO route_sessions (id, route_name, session_date, conducted_by, status) VALUES (?, ?, ?, ?, 'ongoing')`,
-      [id, routeName, sessionDate, conductedBy],
+      `INSERT INTO route_sessions (id, route_name, session_date, conducted_by, status, created_at) VALUES (?, ?, ?, ?, 'ongoing', ?)`,
+      [id, input.routeName, input.sessionDate, input.conductedBy, input.createdAt],
     );
     return id;
   },
 
   // Idempotent upsert for the download/pull path — the server is the source of
   // truth, so a repeated pull updates the existing row instead of colliding on id.
-  upsertSession(
-    routeName: string,
-    sessionDate: string,
-    conductedBy: string,
-    status: string,
-    id: string = generateUUID(),
-  ): string {
+  upsertSession(input: {
+    routeName: string;
+    sessionDate: string;
+    conductedBy: string;
+    status: string;
+    createdAt: string;
+    id?: string;
+  }): string {
+    const id = input.id ?? generateUUID();
     getDb().runSync(
-      `INSERT INTO route_sessions (id, route_name, session_date, conducted_by, status)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO route_sessions (id, route_name, session_date, conducted_by, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          route_name   = excluded.route_name,
          session_date = excluded.session_date,
          conducted_by = excluded.conducted_by,
          status       = excluded.status`,
-      [id, routeName, sessionDate, conductedBy, status],
+      [id, input.routeName, input.sessionDate, input.conductedBy, input.status, input.createdAt],
     );
     return id;
   },

@@ -41,51 +41,53 @@ const SalesDao = {
     }));
   },
 
-  insertSale(
-    id: string,
-    sessionStoreId: string,
-    productId: string,
-    snapshotName: string,
-    snapshotPrice: number,
-    quantitySold: number,
-    quantityBo: number,
-    boReason: string,
-  ) {
+  insertSale(input: {
+    id: string;
+    sessionStoreId: string;
+    productId: string;
+    snapshotName: string;
+    snapshotPrice: number;
+    quantitySold: number;
+    quantityBo: number;
+    boReason: string;
+    createdAt: string;
+  }) {
     getDb().runSync(
-      `INSERT INTO sales (id, session_store_id, product_id, snapshot_name, snapshot_price, quantity_sold, quantity_bo, bo_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sales (id, session_store_id, product_id, snapshot_name, snapshot_price, quantity_sold, quantity_bo, bo_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id,
-        sessionStoreId,
-        productId,
-        snapshotName,
-        snapshotPrice,
-        quantitySold,
-        quantityBo,
-        boReason,
+        input.id,
+        input.sessionStoreId,
+        input.productId,
+        input.snapshotName,
+        input.snapshotPrice,
+        input.quantitySold,
+        input.quantityBo,
+        input.boReason,
+        input.createdAt,
       ],
     );
-    return id;
+    return input.id;
   },
 
-  updateSale(
-    saleId: string,
-    productId: string,
-    snapshotName: string,
-    snapshotPrice: number,
-    quantitySold: number,
-    quantityBo: number,
-    boReason: string,
-  ) {
+  updateSale(input: {
+    saleId: string;
+    productId: string;
+    snapshotName: string;
+    snapshotPrice: number;
+    quantitySold: number;
+    quantityBo: number;
+    boReason: string;
+  }) {
     getDb().runSync(
       `UPDATE sales SET product_id = ?, snapshot_name = ?, snapshot_price = ?, quantity_sold = ?, quantity_bo = ?, bo_reason = ? WHERE id = ?`,
       [
-        productId,
-        snapshotName,
-        snapshotPrice,
-        quantitySold,
-        quantityBo,
-        boReason,
-        saleId,
+        input.productId,
+        input.snapshotName,
+        input.snapshotPrice,
+        input.quantitySold,
+        input.quantityBo,
+        input.boReason,
+        input.saleId,
       ],
     );
   },

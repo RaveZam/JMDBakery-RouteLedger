@@ -154,6 +154,26 @@ before a DAO call; the DAO already did.
   every call site. Call sites read clean: `getActiveSessionForUser(userId)`,
   not `userId ? getActiveSessionForUser(userId) : null`.
 
+## Timestamps on inserts
+
+Never let SQLite generate a `created_at` (`DEFAULT (datetime('now'))`) for a row that
+also gets pushed to Supabase through the outbox. Two independent clock reads — one in
+SQLite, one in the JS payload — drift, even if only by milliseconds, so the local row
+and the synced row end up with different timestamps for the same event.
+
+The procedure, every time a service inserts a row whose `created_at` is synced:
+
+1. Compute the timestamp **once**, in the service, with `getPhTime().toISOString()`
+   (`src/shared/helpers/getPhTime.ts`) — not `new Date().toISOString()` (wrong timezone)
+   and not left to the DB default.
+2. Pass that same string as an explicit arg to the DAO insert function, and as the same
+   string in the outbox payload's `created_at`. One value, two destinations.
+3. The table's schema column is `created_at TEXT NOT NULL` — no `DEFAULT`. This makes a
+   forgotten timestamp a loud insert failure instead of a silently-drifted value.
+
+See `src/features/store/services/sales-services.ts` (`addSale`) and
+`src/features/sessions/services/sessionLocalService.ts` (`startSession`) for the pattern.
+
 ## Imports
 
 - Avoid barrel/`index.ts` re-export files in general — they hurt tree-shaking and invite cycles.

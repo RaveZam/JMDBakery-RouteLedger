@@ -16,12 +16,13 @@ type InsertSessionStoreInput = {
 // Must be called inside a withTransactionSync block — has no transaction of its own.
 export function insertSessionStore(input: InsertSessionStoreInput): void {
   const id = generateUUID();
-  SessionStoresDao.insert(
-    input.sessionId,
-    input.store.id,
-    input.store.province_id,
+  SessionStoresDao.insert({
+    routeSessionId: input.sessionId,
+    storeId: input.store.id,
+    createdAt: input.createdAt,
+    provinceId: input.store.province_id,
     id,
-  );
+  });
   enqueueOutbox({
     entityType: "session_store",
     entityId: id,

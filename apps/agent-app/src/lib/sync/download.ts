@@ -129,13 +129,14 @@ async function downloadSessions(): Promise<number | null> {
     return null;
   }
   for (const row of collapseOngoingSessions(data)) {
-    RouteSessionsDao.upsertSession(
-      row.route_name,
-      row.session_date,
-      row.conducted_by,
-      row.status,
-      row.id,
-    );
+    RouteSessionsDao.upsertSession({
+      routeName: row.route_name,
+      sessionDate: row.session_date,
+      conductedBy: row.conducted_by,
+      status: row.status,
+      createdAt: row.created_at,
+      id: row.id,
+    });
   }
   return data.length;
 }

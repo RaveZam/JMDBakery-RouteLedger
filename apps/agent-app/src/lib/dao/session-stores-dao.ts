@@ -23,15 +23,17 @@ const SESSION_STORE_SELECT = `SELECT ss.*, s.name as store_name, s.province as s
        LEFT JOIN provinces p ON s.province_id = p.id`;
 
 const SessionStoresDao = {
-  insert(
-    routeSessionId: string,
-    storeId: string,
-    provinceId: string | null = null,
-    id: string = generateUUID(),
-  ): string {
+  insert(input: {
+    routeSessionId: string;
+    storeId: string;
+    createdAt: string;
+    provinceId?: string | null;
+    id?: string;
+  }): string {
+    const id = input.id ?? generateUUID();
     getDb().runSync(
-      `INSERT INTO session_stores (id, route_session_id, store_id, province_id) VALUES (?, ?, ?, ?)`,
-      [id, routeSessionId, storeId, provinceId],
+      `INSERT INTO session_stores (id, route_session_id, store_id, province_id, created_at) VALUES (?, ?, ?, ?, ?)`,
+      [id, input.routeSessionId, input.storeId, input.provinceId ?? null, input.createdAt],
     );
     return id;
   },
