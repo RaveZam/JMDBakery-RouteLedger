@@ -9,6 +9,8 @@ type AddSaleInput = {
   productName: string;
   price: number;
   qty: number;
+  boQty: number;
+  boReason: string;
 };
 
 // Reads the raw sale rows logged for one session store.
@@ -26,8 +28,8 @@ export function addSale(input: AddSaleInput): void {
       input.productName,
       input.price,
       input.qty,
-      0,
-      "",
+      input.boQty,
+      input.boReason,
     );
     enqueueOutbox({
       entityType: "sale",
@@ -37,11 +39,42 @@ export function addSale(input: AddSaleInput): void {
         id,
         session_store_id: input.sessionStoreId,
         product_id: input.productId,
-        snapshot_name: input.productName,
+        snapshot_product_name: input.productName,
         snapshot_price: input.price,
         quantity_sold: input.qty,
-        quantity_bo: 0,
-        bo_reason: "",
+        quantity_bo: input.boQty,
+        bo_reason: input.boReason,
+      },
+    });
+  });
+}
+
+type UpdateSaleInput = AddSaleInput & { saleId: string };
+
+export function updateSale(input: UpdateSaleInput): void {
+  getDb().withTransactionSync(() => {
+    SalesDao.updateSale(
+      input.saleId,
+      input.productId,
+      input.productName,
+      input.price,
+      input.qty,
+      input.boQty,
+      input.boReason,
+    );
+    enqueueOutbox({
+      entityType: "sale",
+      entityId: input.saleId,
+      operation: "update",
+      payload: {
+        id: input.saleId,
+        session_store_id: input.sessionStoreId,
+        product_id: input.productId,
+        snapshot_product_name: input.productName,
+        snapshot_price: input.price,
+        quantity_sold: input.qty,
+        quantity_bo: input.boQty,
+        bo_reason: input.boReason,
       },
     });
   });
