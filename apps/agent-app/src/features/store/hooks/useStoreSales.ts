@@ -17,6 +17,7 @@ import { computeRemaining } from "../core/compute-remaining";
 import { validateSaleInput } from "../core/validate-sale-input";
 import {
   addSale,
+  getSalesByRouteSession,
   getSalesBySessionStore,
   removeSale,
   updateSale,
@@ -36,9 +37,9 @@ export function useStoreSales() {
   >({});
 
   const refetchSalesCounts = useCallback(() => {
-    if (!sessionStoreId) return;
-    setSalesCounts(countSoldByProduct(getSalesBySessionStore(sessionStoreId)));
-  }, [sessionStoreId]);
+    if (!sessionId) return;
+    setSalesCounts(countSoldByProduct(getSalesByRouteSession(sessionId)));
+  }, [sessionId]);
 
   useEffect(() => {
     refetchSalesCounts();

@@ -41,6 +41,35 @@ const SalesDao = {
     }));
   },
 
+  getByRouteSessionId(routeSessionId: string): LoggedItem[] {
+    const rows = getDb().getAllSync<{
+      id: string;
+      product_id: string;
+      snapshot_name: string;
+      snapshot_price: number;
+      quantity_sold: number;
+      quantity_bo: number;
+      bo_reason: string | null;
+    }>(
+      `SELECT s.id, s.product_id, s.snapshot_name, s.snapshot_price,
+              s.quantity_sold, s.quantity_bo, s.bo_reason
+       FROM sales s
+       JOIN session_stores ss ON ss.id = s.session_store_id
+       WHERE ss.route_session_id = ?
+       ORDER BY s.created_at ASC`,
+      [routeSessionId],
+    );
+    return rows.map((r) => ({
+      saleId: r.id,
+      productId: r.product_id,
+      productName: r.snapshot_name,
+      price: r.snapshot_price,
+      qty: r.quantity_sold,
+      boQty: r.quantity_bo,
+      boReason: r.bo_reason ?? undefined,
+    }));
+  },
+
   insertSale(input: {
     id: string;
     sessionStoreId: string;

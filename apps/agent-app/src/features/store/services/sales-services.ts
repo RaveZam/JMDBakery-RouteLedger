@@ -19,6 +19,12 @@ export function getSalesBySessionStore(sessionStoreId: string): LoggedItem[] {
   return SalesDao.getBySessionStoreId(sessionStoreId);
 }
 
+// Reads every sale row logged anywhere on the route session (all stores),
+// so remaining stock reflects the truck's whole-day stock, not just this stop.
+export function getSalesByRouteSession(routeSessionId: string): LoggedItem[] {
+  return SalesDao.getByRouteSessionId(routeSessionId);
+}
+
 // Sums sold revenue for one session store, computed in SQL from the sales table.
 export function getNetTotalBySessionStore(sessionStoreId: string): number {
   return SalesDao.getNetTotal(sessionStoreId);
