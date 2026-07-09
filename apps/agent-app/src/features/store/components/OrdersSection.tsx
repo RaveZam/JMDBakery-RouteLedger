@@ -1,25 +1,22 @@
 import { StyleSheet, View, Text } from "react-native";
 import { SectionRow } from "./SectionRow";
 import { SoldOrderRow } from "./SoldOrderRow";
-import type { OrdersSectionProps } from "../types/store-types";
+import { useProductQuantity } from "../context/useProductQuantity";
 
 const CARD_BG = "#FFFFFF";
 const BORDER = "#E2E8F0";
 
-export function OrdersSection({
-  items,
-  onAddPress,
-  onItemPress,
-  onDeleteItem,
-}: OrdersSectionProps) {
+export function OrdersSection() {
+  const { adderModal } = useProductQuantity();
+
   return (
     <View style={styles.section}>
       <SectionRow
         label="ORDERS"
         buttonLabel="+ Add Order"
-        onToggle={onAddPress}
+        onToggle={adderModal.inventory.open}
       />
-      {items.length > 0 ? (
+      {adderModal.inventory.soldItems.length > 0 ? (
         <View style={styles.table}>
           <View style={styles.tableHeader}>
             <Text style={[styles.colHead, styles.colHeadProduct]}>PRODUCT</Text>
@@ -28,13 +25,13 @@ export function OrdersSection({
             <Text style={[styles.colHead, styles.colHeadTotal]}>TOTAL</Text>
             <View style={styles.colHeadDelete} />
           </View>
-          {items.map(({ item, idx }) => (
+          {adderModal.inventory.soldItems.map((item, idx) => (
             <SoldOrderRow
-              key={idx}
+              key={item.saleId}
               item={item}
               index={idx}
-              onPress={() => onItemPress(idx)}
-              onDelete={onDeleteItem}
+              onPress={() => adderModal.inventory.onItemPress(idx)}
+              onDelete={() => adderModal.inventory.onDeleteItem(idx)}
             />
           ))}
         </View>

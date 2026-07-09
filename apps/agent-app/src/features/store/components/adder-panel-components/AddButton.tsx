@@ -12,7 +12,9 @@ export function AddButton() {
       activeOpacity={0.85}
       onPress={() => adderModal.inventory.addOrder()}
     >
-      <Text style={styles.addBtnText}>Add to Order</Text>
+      <Text style={styles.addBtnText}>
+        {adderModal.inventory.editingSaleId ? "Save Changes" : "Add to Order"}
+      </Text>
     </TouchableOpacity>
   );
 }

@@ -3,29 +3,49 @@ import { QtyStepper } from "./adder-panel-components/QtyStepper";
 import { ProductSelector } from "./adder-panel-components/ProductSelector";
 import { ReasonPicker } from "./adder-panel-components/ReasonPicker";
 import { AddButton } from "./adder-panel-components/AddButton";
+import { useProductQuantity } from "../context/useProductQuantity";
 
 const BORDER = "#E2E8F0";
 
 export function AdderPanel() {
+  const { adderModal } = useProductQuantity();
+
+  const hasSelectedProduct = !!adderModal.inventory.selectedProduct;
+  const needsReason =
+    adderModal.inventory.boQty > 0 && !adderModal.inventory.boReason;
+
   return (
     <View style={styles.panel}>
       <ProductSelector />
-      <View style={styles.stepperSection}>
-        <QtyStepper />
-      </View>
-      <View style={styles.sectionDivider}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerLabel}>Bad Order</Text>
-        <View style={styles.dividerLine} />
-      </View>
+      {hasSelectedProduct && (
+        <>
+          <View style={styles.stepperSection}>
+            <QtyStepper
+              value={adderModal.inventory.quantity}
+              onChange={adderModal.inventory.setQuantity}
+            />
+          </View>
+          <View style={styles.sectionDivider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerLabel}>Bad Order</Text>
+            <View style={styles.dividerLine} />
+          </View>
+          <View style={styles.stepperSection}>
+            <QtyStepper
+              label="Bad Order Qty"
+              value={adderModal.inventory.boQty}
+              onChange={adderModal.inventory.setBoQty}
+            />
+            {needsReason && (
+              <Text style={styles.reasonWarning}>Reason required</Text>
+            )}
+          </View>
 
-      <View style={styles.stepperSection}>
-        <QtyStepper />
-      </View>
+          <ReasonPicker />
 
-      <ReasonPicker />
-
-      <AddButton />
+          <AddButton />
+        </>
+      )}
     </View>
   );
 }
@@ -50,5 +70,10 @@ const styles = StyleSheet.create({
     color: "#CBD5E1",
     letterSpacing: 0.8,
     textTransform: "uppercase",
+  },
+  reasonWarning: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#EF4444",
   },
 });

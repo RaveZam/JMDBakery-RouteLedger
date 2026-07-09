@@ -45,7 +45,9 @@ export function AdderModal() {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Add Items</Text>
+            <Text style={styles.title}>
+              {adderModal.inventory.editingSaleId ? "Edit Item" : "Add Items"}
+            </Text>
             <TouchableOpacity
               style={styles.closeBtn}
               onPress={adderModal.inventory.close}
