@@ -15,7 +15,13 @@ export function HistorySessionList() {
       {history.sessions.length === 0 ? (
         <EmptyHistoryList />
       ) : (
-        history.sessions.map((s) => <HistorySessionCard key={s.id} session={s} />)
+        history.sessions.map((s) => (
+          <HistorySessionCard
+            key={s.id}
+            session={s}
+            onDeleted={history.refresh}
+          />
+        ))
       )}
     </ScrollView>
   );

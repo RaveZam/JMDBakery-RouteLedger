@@ -9,11 +9,11 @@ export function useHistoryList() {
     RouteSessionsDao.getAll(),
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      setSessions(RouteSessionsDao.getAll());
-    }, []),
-  );
+  const refresh = useCallback(() => {
+    setSessions(RouteSessionsDao.getAll());
+  }, []);
 
-  return { history: { sessions } };
+  useFocusEffect(refresh);
+
+  return { history: { sessions, refresh } };
 }
