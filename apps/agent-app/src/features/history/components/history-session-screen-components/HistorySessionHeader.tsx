@@ -37,7 +37,7 @@ export function HistorySessionHeader() {
     <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
       <View style={styles.headerTopRow}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.push("/main/history")}
           hitSlop={10}
           style={styles.backBtn}
         >
