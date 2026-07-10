@@ -1,10 +1,10 @@
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useHistorySession } from "../../hooks/useHistorySession";
+import { useHistorySessionContext } from "../../context/HistorySessionContext";
 
 export function EndingInventoryFab() {
-  const { session } = useHistorySession();
+  const session = useHistorySessionContext();
   if (session.inventory.length === 0) return null;
 
   return (

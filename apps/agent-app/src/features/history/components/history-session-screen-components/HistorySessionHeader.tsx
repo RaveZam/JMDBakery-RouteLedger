@@ -3,7 +3,8 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { formatLongDate } from "@/src/shared/helpers/formatLongDate";
-import { useHistorySession } from "../../hooks/useHistorySession";
+import { useHistorySessionContext } from "../../context/HistorySessionContext";
+import { countVisited } from "../../core/session-derived";
 
 function MissingEndingInventoryBanner() {
   return (
@@ -29,8 +30,8 @@ function CancelSessionBanner({ onPress }: { onPress: () => void }) {
 
 export function HistorySessionHeader() {
   const insets = useSafeAreaInsets();
-  const { session } = useHistorySession();
-  const visitedCount = session.stores.filter((s) => s.visited === 1).length;
+  const session = useHistorySessionContext();
+  const visitedCount = countVisited(session.stores);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + 12 }]}>

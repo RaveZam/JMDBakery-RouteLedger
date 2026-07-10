@@ -9,6 +9,17 @@ import EndingInventoryDao from "@/src/lib/dao/ending-inventory-dao";
 import type { LoggedItem } from "@/src/features/store/types/store-types";
 import { cancelHistorySession } from "../services/cancel-session-service";
 
+export type HistorySession = {
+  sessionId: string;
+  data: ReturnType<typeof RouteSessionsDao.getById>;
+  inventory: ReturnType<typeof SessionInventoryDao.getBySessionId>;
+  stores: ReturnType<typeof SessionStoresDao.getBySessionId>;
+  salesByStore: Record<string, LoggedItem[]>;
+  hasEndingInventory: boolean;
+  isOngoing: boolean;
+  actions: { confirmCancel: () => void };
+};
+
 function confirmCancelSession(sessionId: string) {
   Alert.alert(
     "Cancel this session?",
@@ -55,7 +66,7 @@ function useSessionDetailData(sessionId: string) {
   return { session, inventory, stores, salesByStore, hasEndingInventory };
 }
 
-export function useHistorySession() {
+export function useHistorySession(): { session: HistorySession } {
   const params = useLocalSearchParams<{ sessionId?: string }>();
   const sessionId =
     typeof params.sessionId === "string" ? params.sessionId : "";

@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from "react-native";
-import { useHistorySession } from "../../hooks/useHistorySession";
+import { useHistorySessionContext } from "../../context/HistorySessionContext";
 
 export function MorningInventorySection() {
-  const { session } = useHistorySession();
+  const session = useHistorySessionContext();
 
   return (
     <>

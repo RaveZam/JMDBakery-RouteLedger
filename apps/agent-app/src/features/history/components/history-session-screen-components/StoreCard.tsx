@@ -2,6 +2,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type SessionStoresDao from "@/src/lib/dao/session-stores-dao";
 import type { LoggedItem } from "@/src/features/store/types/store-types";
+import { sumItemsTotal } from "../../core/session-derived";
 
 type SessionStoreRow = ReturnType<typeof SessionStoresDao.getBySessionId>[number];
 
@@ -40,7 +41,7 @@ function StoreItemsList({ items }: { items: LoggedItem[] }) {
   if (items.length === 0) {
     return <Text style={styles.noItems}>No items logged.</Text>;
   }
-  const storeTotal = items.reduce((sum, it) => sum + it.price * it.qty, 0);
+  const storeTotal = sumItemsTotal(items);
   return (
     <View style={styles.itemsWrap}>
       {items.map((it) => (
