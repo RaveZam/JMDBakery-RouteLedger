@@ -12,6 +12,7 @@ const FEATURES = [
   "history",
   "store",
   "settings",
+  "ending_inventory",
 ];
 
 // Allowed cross-feature edges: importer -> [allowed targets].
@@ -20,6 +21,7 @@ const ALLOWED_FEATURE_EDGES = {
   routes: ["sessions"], // RouteDetailScreen starts a session via useStartSession
   inventory: ["store", "sessions"], // reuses store's picker/types; can cancel the ongoing session
   history: ["store"], // session history renders store distribution items
+  ending_inventory: ["store"], // reuses store's remaining-stock math and session-wide sales query
 };
 
 const crossFeatureZones = FEATURES.flatMap((importer) =>
