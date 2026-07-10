@@ -111,5 +111,7 @@ export function useEndingInventory() {
     }
   }, [sessionId, items]);
 
-  return { endingInventory: { routeName, items, saving, updateQty, save } };
+  return {
+    endingInventory: { sessionId, routeName, items, saving, updateQty, save },
+  };
 }

@@ -27,7 +27,15 @@ export default function EndingInventoryScreen() {
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <View style={styles.headerTopRow}>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() =>
+                router.replace({
+                  pathname: "/main/history/[sessionId]",
+                  params: {
+                    sessionId: endingInventory.sessionId ?? "",
+                    routeName: endingInventory.routeName,
+                  },
+                })
+              }
               hitSlop={10}
               style={styles.backBtn}
             >
