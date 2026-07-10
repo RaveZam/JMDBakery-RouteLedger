@@ -31,7 +31,7 @@ function StoreCardHeader({ store }: { store: SessionStoreRow }) {
         ) : null}
       </View>
       <Text style={[styles.storeStatus, visited ? styles.storeStatusDone : null]}>
-        {visited ? "Visited" : "Pending"}
+        {visited ? "Visited" : "Skipped"}
       </Text>
     </View>
   );
