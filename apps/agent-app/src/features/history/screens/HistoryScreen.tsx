@@ -65,7 +65,7 @@ export default function HistoryScreen() {
             </View>
           ) : (
             sessions.map((s) => {
-              const completed = s.status === "completed";
+              console.log("completed", s.status);
               return (
                 <TouchableOpacity
                   key={s.id}
@@ -90,24 +90,31 @@ export default function HistoryScreen() {
                       {s.route_name}
                     </Text>
                     <Text style={styles.cardMeta}>
-                      {formatDate(s.session_date)} • {s.conducted_by.slice(0, 5)}
+                      {formatDate(s.session_date)} •{" "}
+                      {s.conducted_by.slice(0, 5)}
                     </Text>
                   </View>
                   <View
                     style={[
                       styles.badge,
-                      completed ? styles.badgeDone : styles.badgeOngoing,
+                      s.status === "completed"
+                        ? styles.badgeDone
+                        : s.status === "cancelled"
+                          ? styles.badgeCancelled
+                          : styles.badgeOngoing,
                     ]}
                   >
                     <Text
                       style={[
                         styles.badgeText,
-                        completed
+                        s.status === "completed"
                           ? styles.badgeTextDone
-                          : styles.badgeTextOngoing,
+                          : s.status === "cancelled"
+                            ? styles.badgeTextCancelled
+                            : styles.badgeTextOngoing,
                       ]}
                     >
-                      {completed ? "Completed" : "Ongoing"}
+                      {s.status}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -189,7 +196,9 @@ const styles = StyleSheet.create({
   },
   badgeDone: { backgroundColor: "#16A34A", borderColor: "#15803D" },
   badgeOngoing: { backgroundColor: "#F8FAFC", borderColor: "#CBD5E1" },
+  badgeCancelled: { backgroundColor: "#FEE2E2", borderColor: "#FCA5A5" },
   badgeText: { fontSize: 11, fontWeight: "600" },
   badgeTextDone: { color: "#FFFFFF" },
   badgeTextOngoing: { color: "#94A3B8" },
+  badgeTextCancelled: { color: "#B91C1C" },
 });
