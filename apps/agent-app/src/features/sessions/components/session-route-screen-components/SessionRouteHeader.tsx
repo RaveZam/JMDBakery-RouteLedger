@@ -2,21 +2,26 @@ import { StyleSheet, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSessionRoute } from "../../context/useSessionRoute";
 import { formatLongDate } from "@/src/shared/helpers/formatLongDate";
+import { SessionCancelButton } from "./SessionCancelButton";
 
 export function SessionRouteHeader() {
   const { session } = useSessionRoute();
   const insets = useSafeAreaInsets();
 
   const routeName = session.session?.route_name ?? "Route";
-  const { progress } = session;
   const formattedDate = formatLongDate(session.session?.session_date);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
       <View style={styles.headerTopRow}>
         <Text style={styles.headerLabel}>TODAY'S SESSION</Text>
-        <View style={styles.stopsBadge}>
-          <Text style={styles.stopsBadgeText}>{progress.total} stops</Text>
+        <View style={styles.headerTopRight}>
+          <View style={styles.stopsBadge}>
+            <Text style={styles.stopsBadgeText}>
+              {session.progress.total} stops
+            </Text>
+          </View>
+          <SessionCancelButton />
         </View>
       </View>
       <Text style={styles.headerTitle} numberOfLines={1}>
@@ -31,16 +36,21 @@ export function SessionRouteHeader() {
           </>
         ) : null}
         <Text style={styles.headerMetaText}>
-          {progress.visited} of {progress.total} done
+          {session.progress.visited} of {session.progress.total} done
         </Text>
       </View>
       <View style={styles.progressRow}>
         <View style={styles.progressTrack}>
           <View
-            style={[styles.progressFill, { width: `${progress.ratio * 100}%` }]}
+            style={[
+              styles.progressFill,
+              { width: `${session.progress.ratio * 100}%` },
+            ]}
           />
         </View>
-        <Text style={styles.progressPct}>{progress.percent}% completed</Text>
+        <Text style={styles.progressPct}>
+          {session.progress.percent}% completed
+        </Text>
       </View>
     </View>
   );
@@ -64,6 +74,11 @@ const styles = StyleSheet.create({
     color: "#86EFAC",
     letterSpacing: 1.2,
     textTransform: "uppercase",
+  },
+  headerTopRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   stopsBadge: {
     backgroundColor: "rgba(255,255,255,0.15)",

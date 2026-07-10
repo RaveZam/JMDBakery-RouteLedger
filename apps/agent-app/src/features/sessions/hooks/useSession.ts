@@ -2,7 +2,10 @@ import { useState, useCallback, useMemo } from "react";
 import { useFocusEffect, router } from "expo-router";
 import RouteSessionsDao from "@/src/lib/dao/route-sessions-dao";
 import SessionStoresDao from "@/src/lib/dao/session-stores-dao";
-import { completeSession, cancelSession } from "../services/sessionLocalService";
+import {
+  completeSession,
+  cancelSession,
+} from "../services/sessionLocalService";
 import { groupStoresByProvince } from "../core/group-stores-by-province";
 import { computeSessionProgress } from "../core/compute-session-progress";
 import type { RouteSession, SessionStore } from "../types/session-types";
