@@ -35,8 +35,9 @@ test("rejects a second ongoing session via the unique index", () => {
 
 test("allows a new ongoing session once the previous is cancelled", () => {
   const first = insertSession("ongoing");
-  getDb().runSync("UPDATE route_sessions SET status = 'cancelled' WHERE id = ?", [
-    first,
-  ]);
+  getDb().runSync(
+    "UPDATE route_sessions SET status = 'cancelled' WHERE id = ?",
+    [first],
+  );
   expect(() => insertSession("ongoing")).not.toThrow();
 });
