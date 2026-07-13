@@ -1,25 +1,41 @@
 "use client";
+
+import { useMemo } from "react";
 import { getIntelligenceMetrics } from "../helpers/getIntelligenceMetrics";
+import { computeProvinceRevenue } from "../helpers/computeProvinceRevenue";
 import { IntelligenceHeader } from "./panels/IntelligenceHeader";
 import { BusinessHealthOverview } from "./panels/BusinessHealthOverview";
 import { NextBestActions } from "./panels/NextBestActions";
 import { ForecastSection } from "./panels/ForecastSection";
 import { MorningInventoryInsights } from "./panels/MorningInventoryInsights";
 import type { GeoRevenueRow } from "../../dashboard/services/revenueGeoService";
+import { useSalesData } from "@/app/features/sales-data/SalesDataProvider";
+import { parseRecordsFiltersLast30Days } from "@/lib/selectors/filters";
+
+type SearchParams = Record<string, string | string[] | undefined>;
 
 export function IntelligencePageClient({
-  data,
+  sp,
   yearData,
   allTimeData,
-  provinces,
   barangays,
 }: {
-  data: any;
+  sp: SearchParams;
   yearData: any;
   allTimeData: any;
-  provinces: { province: string; revenue: number }[];
   barangays: GeoRevenueRow[];
 }) {
+  const { data: allData } = useSalesData();
+  const filters = parseRecordsFiltersLast30Days(sp);
+
+  const data = useMemo(
+    () =>
+      allData.filter(
+        (r) => r.date >= filters.dateFrom && r.date <= filters.dateTo,
+      ),
+    [allData, filters.dateFrom, filters.dateTo],
+  );
+  const provinces = useMemo(() => computeProvinceRevenue(allData), [allData]);
   const metrics = getIntelligenceMetrics(data);
 
   return (
