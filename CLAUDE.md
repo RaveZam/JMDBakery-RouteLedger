@@ -90,7 +90,7 @@ src/lib/                       # bottom layer: data/infra (mirrors FlexApp), imp
     outbox.ts                  # enqueueOutbox() + runOutboxSync()
     download.ts                # runDownloadSync(userId): Supabase -> local pull
 src/shared/                    # cross-feature UI + utils (may import src/lib, never features)
-  components/ (ThemedText, ThemedView, ui/header)  hooks/  helpers/ (getPhTime)  constants/ (Colors)  styles/ (modalStyles)
+  components/ (ThemedText, ThemedView)  hooks/  helpers/ (getPhTime)  constants/ (Colors)  styles/ (modalStyles)
 src/features/                  # one feature = one subdomain; screens/ components/ hooks/ (React-only) services/ types/
   auth/                        # useLogin hook, sign-in screen
   routes/                      # route + province + store CRUD, route list/select
@@ -151,7 +151,7 @@ router.replace("/auth/sign-in");
 - All styles via `StyleSheet.create()` (React Native)
 - Flexbox for layout; `SafeAreaView` wraps screens
 - Theme colors from `src/shared/constants/Colors.ts` (light/dark variants)
-- Reusable header: `src/shared/components/ui/header.tsx` (back button, title, right element slot)
+- No shared header component — each screen implements its own header locally
 - FABs: absolutely positioned with `expo-linear-gradient` backgrounds
 - Cards: `borderRadius: 8`, `borderColor: "#E5E7EB"`
 
