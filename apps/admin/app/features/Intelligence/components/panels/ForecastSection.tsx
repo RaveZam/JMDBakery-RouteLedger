@@ -1,21 +1,10 @@
+import type { SalesRecord } from "@/app/server/getBaseData";
 import { IntelligenceForecastChart } from "../IntelligenceForecastChart";
 
-export function ForecastSection({
-  data,
-  yearData,
-  allTimeData,
-}: {
-  data: any;
-  yearData: any;
-  allTimeData: any;
-}) {
+export function ForecastSection({ data }: { data: SalesRecord[] }) {
   return (
     <section>
-      <IntelligenceForecastChart
-        data={data}
-        yearData={yearData}
-        allTimeData={allTimeData}
-      />
+      <IntelligenceForecastChart data={data} />
     </section>
   );
 }

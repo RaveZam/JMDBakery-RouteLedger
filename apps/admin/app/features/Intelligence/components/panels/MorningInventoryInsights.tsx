@@ -2,7 +2,7 @@ import { MapPin, MapPinned } from "lucide-react";
 import { RevenueRankCard } from "../RevenueRankCard";
 import { IntelligenceStockAllocation } from "../IntelligenceStockAllocation";
 import { IntelligenceVarianceTracker } from "../IntelligenceVarianceTracker";
-import type { GeoRevenueRow } from "../../../dashboard/services/revenueGeoService";
+import type { GeoRevenueRow } from "../../constants/staticBarangays";
 
 export function MorningInventoryInsights({
   provinces,
