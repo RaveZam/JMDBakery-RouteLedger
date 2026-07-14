@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { computeTopProducts } from "../helpers/computeTopProducts";
@@ -10,9 +9,6 @@ import type { ProductSoldRecord } from "../types/dashboard-types";
 const COLORS = ["#1f7a44", "#2f9e5e", "#c79a3a", "#dec06a", "#86a06b"];
 
 export function TopProductsSoldTable({ data }: { data: ProductSoldRecord[] }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   const topProducts = computeTopProducts(data);
   const totalQty = topProducts.reduce((sum, d) => sum + d.qty, 0);
 
@@ -29,39 +25,37 @@ export function TopProductsSoldTable({ data }: { data: ProductSoldRecord[] }) {
         ) : (
           <div className="flex items-center gap-6">
             <div className="shrink-0">
-              {mounted && (
-                <PieChart width={200} height={220}>
-                  <Pie
-                    data={topProducts}
-                    dataKey="qty"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    strokeWidth={0}
-                  >
-                    {topProducts.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      `${value} qty`,
-                      name,
-                    ]}
-                    contentStyle={{
-                      fontSize: 12,
-                      borderRadius: 10,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
-                      color: "hsl(var(--foreground))",
-                      boxShadow: "0 10px 30px rgba(15,23,42,0.10)",
-                    }}
-                  />
-                </PieChart>
-              )}
+              <PieChart width={200} height={220}>
+                <Pie
+                  data={topProducts}
+                  dataKey="qty"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  strokeWidth={0}
+                >
+                  {topProducts.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    `${value} qty`,
+                    name,
+                  ]}
+                  contentStyle={{
+                    fontSize: 12,
+                    borderRadius: 10,
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--card))",
+                    color: "hsl(var(--foreground))",
+                    boxShadow: "0 10px 30px rgba(15,23,42,0.10)",
+                  }}
+                />
+              </PieChart>
             </div>
 
             <div className="flex-1 space-y-2">
