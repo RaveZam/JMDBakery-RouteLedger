@@ -28,8 +28,7 @@ type RawSale = {
 };
 
 type RawSessionStore = {
-  stores: { store_name: string | null } | null;
-  agent_provinces: { name: string | null } | null;
+  stores: { store_name: string | null; province: string | null } | null;
   sales: RawSale[];
 };
 
@@ -54,7 +53,7 @@ function mapSessionStore(
   agent: string,
 ): SalesRecord[] {
   const store = sessionStore.stores?.store_name ?? "";
-  const province = sessionStore.agent_provinces?.name ?? "";
+  const province = sessionStore.stores?.province ?? "";
 
   return sessionStore.sales.map((sale) => ({
     id: sale.id,
@@ -89,10 +88,8 @@ export const getSalesDataset = cache(async (): Promise<SalesRecord[]> => {
       `
       id, session_date, conducted_by,
       session_stores!inner(
-        province_id,
-        agent_provinces(name),
         sales(*),
-        stores(store_name)
+        stores(store_name, province)
       )
     `,
     )
