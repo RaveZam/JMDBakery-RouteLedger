@@ -26,3 +26,14 @@ export type SessionStoreSaleRow = {
   boReason: string | null;
   total: number;
 };
+
+export type InventorySummaryRow = {
+  productId: string;
+  productName: string;
+  morning: number;
+  sold: number;
+  backOrder: number;
+  expected: number;
+  ending: number;
+  variance: number;
+};
