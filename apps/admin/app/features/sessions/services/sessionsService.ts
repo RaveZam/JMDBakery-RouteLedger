@@ -1,33 +1,30 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type {
   SessionRow,
-  SessionStoreSaleRow,
   SessionStoreRow,
+  SessionStoreSaleRow,
 } from "../types/session-types";
 
-async function resolveAgentNames(
-  uuids: string[],
-): Promise<Record<string, string>> {
-  if (uuids.length === 0) return {};
-  try {
-    const supabaseAdmin = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
-    if (error) return {};
-    const map: Record<string, string> = {};
-    for (const user of data.users) {
-      map[user.id] =
-        (user.user_metadata?.name as string) || user.email || user.id;
-    }
-    return map;
-  } catch {
-    return {};
-  }
+type SessionQueryRow = {
+  id: string;
+  route_name: string;
+  session_date: string;
+  status: string;
+  session_stores: { visited: boolean }[] | null;
+};
+
+function mapSessionRow(row: SessionQueryRow): SessionRow {
+  const storeRows = row.session_stores ?? [];
+  return {
+    id: row.id,
+    routeName: row.route_name,
+    sessionDate: row.session_date,
+    status: row.status as "ongoing" | "completed",
+    totalStores: storeRows.length,
+    visitedStores: storeRows.filter((r) => r.visited).length,
+  };
 }
 
 export async function getSessions(): Promise<SessionRow[]> {
@@ -35,31 +32,41 @@ export async function getSessions(): Promise<SessionRow[]> {
 
   const { data, error } = await supabase
     .from("route_sessions")
-    .select(
-      "id, route_name, session_date, conducted_by, status, created_at, session_stores(visited)",
-    )
-    .order("created_at", { ascending: false }).limit(100);
+    .select("id, route_name, session_date, status, session_stores(visited)")
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (error) throw new Error(error.message);
 
-  const sessions = data ?? [];
-  const uuids = [...new Set(sessions.map((s) => s.conducted_by))];
-  const agentNames = await resolveAgentNames(uuids);
+  return (data ?? []).map(mapSessionRow);
+}
 
-  return sessions.map((s: any) => {
-    const storeRows: { visited: boolean }[] = s.session_stores ?? [];
-    return {
-      id: s.id,
-      routeName: s.route_name,
-      sessionDate: s.session_date,
-      conductedBy: s.conducted_by,
-      conductedByName: agentNames[s.conducted_by] ?? s.conducted_by,
-      status: s.status as "ongoing" | "completed",
-      createdAt: s.created_at,
-      totalStores: storeRows.length,
-      visitedStores: storeRows.filter((r) => r.visited).length,
-    };
-  });
+// `session_stores.store_id -> stores.id` is many-to-one: Postgrest returns
+// `stores` as a single object at runtime, even though supabase-js's
+// query-string type inference (no generated Database types here) guesses
+// an array for every embedded relation. Cast to the true runtime shape.
+type SessionStoreQueryRow = {
+  id: string;
+  store_id: string;
+  visited: boolean;
+  stores: {
+    store_name: string;
+    province: string | null;
+    city: string | null;
+    barangay: string | null;
+  } | null;
+};
+
+function mapSessionStoreRow(row: SessionStoreQueryRow): SessionStoreRow {
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    storeName: row.stores?.store_name ?? "Unknown",
+    province: row.stores?.province ?? null,
+    city: row.stores?.city ?? null,
+    barangay: row.stores?.barangay ?? null,
+    visited: Boolean(row.visited),
+  };
 }
 
 export async function getSessionStores(
@@ -76,37 +83,49 @@ export async function getSessionStores(
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((ss: any) => ({
-    id: ss.id,
-    storeId: ss.store_id,
-    storeName: ss.stores?.store_name ?? "Unknown",
-    province: ss.stores?.province ?? null,
-    city: ss.stores?.city ?? null,
-    barangay: ss.stores?.barangay ?? null,
-    visited: Boolean(ss.visited),
-  }));
+  const rows = (data ?? []) as unknown as SessionStoreQueryRow[];
+  return rows.map(mapSessionStoreRow);
+}
+
+// `snapshot_product_name` is captured on the sale itself at the time it was logged —
+// use it instead of joining `products`, since `product_id` can point at a
+// since-deleted product (that's the whole point of the snapshot).
+type SessionStoreSaleQueryRow = {
+  id: string;
+  snapshot_product_name: string;
+  snapshot_price: number;
+  quantity_sold: number;
+  quantity_bo: number;
+  bo_reason: string | null;
+  total: number;
+};
+
+function mapSaleRow(row: SessionStoreSaleQueryRow): SessionStoreSaleRow {
+  return {
+    id: row.id,
+    productName: row.snapshot_product_name,
+    snapshotPrice: row.snapshot_price,
+    quantitySold: row.quantity_sold,
+    quantityBO: row.quantity_bo,
+    boReason: row.bo_reason,
+    total: row.total,
+  };
 }
 
 export async function getStoreSales(
   sessionStoreId: string,
 ): Promise<SessionStoreSaleRow[]> {
   const supabase = await createClient();
+
   const { data, error } = await supabase
     .from("sales")
     .select(
-      "id, snapshot_price, quantity_sold, quantity_bo, bo_reason, total, products(product_name)",
+      "id, snapshot_product_name, snapshot_price, quantity_sold, quantity_bo, bo_reason, total",
     )
     .eq("session_store_id", sessionStoreId);
 
-  if (error || !data) return [];
+  if (error) throw new Error(error.message);
 
-  return data.map((s: any) => ({
-    id: s.id,
-    productName: s.products?.product_name ?? "Unknown",
-    snapshotPrice: s.snapshot_price,
-    quantitySold: s.quantity_sold,
-    quantityBO: s.quantity_bo,
-    boReason: s.bo_reason,
-    total: s.total,
-  }));
+  const rows = (data ?? []) as unknown as SessionStoreSaleQueryRow[];
+  return rows.map(mapSaleRow);
 }
