@@ -1,5 +1,9 @@
 import { cache } from "react";
-import { QueryClient, defaultShouldDehydrateQuery, isServer } from "@tanstack/react-query";
+import {
+  QueryClient,
+  defaultShouldDehydrateQuery,
+  isServer,
+} from "@tanstack/react-query";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
@@ -11,7 +15,8 @@ function makeQueryClient(): QueryClient {
       },
       dehydrate: {
         shouldDehydrateQuery: (query) =>
-          defaultShouldDehydrateQuery(query) || query.state.status === "pending",
+          defaultShouldDehydrateQuery(query) ||
+          query.state.status === "pending",
       },
     },
   });
