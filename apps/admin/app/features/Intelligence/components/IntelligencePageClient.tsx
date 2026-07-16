@@ -7,6 +7,7 @@ import { computeIntelligenceKpis } from "../helpers/kpis";
 import { IntelligenceHeader } from "./IntelligenceHeader";
 import { KpiSection } from "./KpiSection";
 import { ForecastChart } from "./ForecastChart";
+import { ProductionRecommendations } from "./ProductionRecommendations";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -39,6 +40,7 @@ export function IntelligencePageClient({ sp }: { sp: SearchParams }) {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="mx-auto w-full max-w-[1200px] space-y-6">
           <KpiSection kpis={kpis} />
+          <ProductionRecommendations records={last30DaysData} />
           <ForecastChart records={allData} />
         </div>
       </div>
