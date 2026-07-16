@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { mergeInventorySummary } from "../helpers/sessionHelpers";
 import type {
   InventorySummaryRow,
   SessionRow,
@@ -119,12 +118,9 @@ export async function getStoreSales(
 ): Promise<SessionStoreSaleRow[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("sales")
-    .select(
-      "id, snapshot_product_name, snapshot_price, quantity_sold, quantity_bo, bo_reason, total",
-    )
-    .eq("session_store_id", sessionStoreId);
+  const { data, error } = await supabase.rpc("get_store_sales", {
+    p_session_store_id: sessionStoreId,
+  });
 
   if (error) throw new Error(error.message);
 
@@ -132,48 +128,29 @@ export async function getStoreSales(
   return rows.map(mapSaleRow);
 }
 
-type InventorySnapshotQueryRow = {
+type SessionInventorySummaryQueryRow = {
   product_id: string;
-  snapshot_product_name: string;
-  quantity: number;
+  product_name: string;
+  morning: number;
+  sold: number;
+  back_order: number;
+  expected: number;
+  ending: number;
+  variance: number;
 };
 
-// `sales.session_store_id -> session_stores.id` is many-to-one: Postgrest
-// returns `session_stores` as a single object at runtime, even though
-// supabase-js's query-string type inference (no generated Database types
-// here) guesses an array for every embedded relation. Cast to the true
-// runtime shape (same gotcha as `SessionStoreQueryRow` above).
-type SessionSaleAggQueryRow = {
-  product_id: string;
-  snapshot_product_name: string;
-  quantity_sold: number;
-  quantity_bo: number;
-  session_stores: { route_session_id: string } | null;
-};
-
-function mapInventorySnapshotRow(row: InventorySnapshotQueryRow): {
-  productId: string;
-  productName: string;
-  quantity: number;
-} {
+function mapInventorySummaryRow(
+  row: SessionInventorySummaryQueryRow,
+): InventorySummaryRow {
   return {
     productId: row.product_id,
-    productName: row.snapshot_product_name,
-    quantity: row.quantity,
-  };
-}
-
-function mapSessionSaleAggRow(row: SessionSaleAggQueryRow): {
-  productId: string;
-  productName: string;
-  quantitySold: number;
-  quantityBO: number;
-} {
-  return {
-    productId: row.product_id,
-    productName: row.snapshot_product_name,
-    quantitySold: row.quantity_sold,
-    quantityBO: row.quantity_bo,
+    productName: row.product_name,
+    morning: row.morning,
+    sold: row.sold,
+    backOrder: row.back_order,
+    expected: row.expected,
+    ending: row.ending,
+    variance: row.variance,
   };
 }
 
@@ -182,37 +159,12 @@ export async function getSessionInventory(
 ): Promise<InventorySummaryRow[]> {
   const supabase = await createClient();
 
-  const [morningRes, endingRes, salesRes] = await Promise.all([
-    supabase
-      .from("session_inventory")
-      .select("product_id, snapshot_product_name, quantity")
-      .eq("route_session_id", sessionId),
-    supabase
-      .from("ending_inventory")
-      .select("product_id, snapshot_product_name, quantity")
-      .eq("route_session_id", sessionId),
-    supabase
-      .from("sales")
-      .select(
-        "product_id, snapshot_product_name, quantity_sold, quantity_bo, session_stores!inner(route_session_id)",
-      )
-      .eq("session_stores.route_session_id", sessionId),
-  ]);
+  const { data, error } = await supabase.rpc("get_session_inventory_summary", {
+    p_session_id: sessionId,
+  });
 
-  if (morningRes.error) throw new Error(morningRes.error.message);
-  if (endingRes.error) throw new Error(endingRes.error.message);
-  if (salesRes.error) throw new Error(salesRes.error.message);
+  if (error) throw new Error(error.message);
 
-  const morningRows = (morningRes.data ??
-    []) as unknown as InventorySnapshotQueryRow[];
-  const endingRows = (endingRes.data ??
-    []) as unknown as InventorySnapshotQueryRow[];
-  const salesRows = (salesRes.data ??
-    []) as unknown as SessionSaleAggQueryRow[];
-
-  return mergeInventorySummary(
-    morningRows.map(mapInventorySnapshotRow),
-    endingRows.map(mapInventorySnapshotRow),
-    salesRows.map(mapSessionSaleAggRow),
-  );
+  const rows = (data ?? []) as unknown as SessionInventorySummaryQueryRow[];
+  return rows.map(mapInventorySummaryRow);
 }
