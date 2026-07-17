@@ -136,6 +136,7 @@ async function downloadSessions(): Promise<number | null> {
       routeName: row.route_name,
       sessionDate: row.session_date,
       conductedBy: row.conducted_by,
+      conductedByName: row.conducted_by_name,
       status: row.status,
       createdAt: row.created_at,
       id: row.id,
