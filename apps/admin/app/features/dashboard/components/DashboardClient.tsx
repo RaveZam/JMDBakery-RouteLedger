@@ -7,11 +7,21 @@ import { TopProductsSoldTable } from "@/app/features/dashboard/components/TopPro
 import { SalesLineChart } from "@/app/features/dashboard/components/SalesLineChart";
 import { DashboardHeader } from "@/app/features/dashboard/components/DashboardHeader";
 import { useSalesDataQuery } from "@/app/features/sales-data/salesDataQuery";
+import { LoadingSpinner } from "@/app/features/sales-data/LoadingSpinner";
 import { useDashboardFilter } from "../hooks/useDashboardFilter";
 
 export function DashboardClient() {
-  const { data: allData } = useSalesDataQuery();
+  const { data: allData, isLoading } = useSalesDataQuery();
   const { filter, data, onFilterChange } = useDashboardFilter(allData);
+
+  if (isLoading) {
+    return (
+      <>
+        <DashboardHeader filter={filter} onFilterChange={onFilterChange} />
+        <LoadingSpinner />
+      </>
+    );
+  }
 
   return (
     <>

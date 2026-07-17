@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useSalesDataQuery } from "@/app/features/sales-data/salesDataQuery";
+import { LoadingSpinner } from "@/app/features/sales-data/LoadingSpinner";
 import { parseRecordsFiltersLast30Days } from "@/lib/selectors/filters";
 import { computeIntelligenceKpis } from "../helpers/kpis";
 import { IntelligenceHeader } from "./IntelligenceHeader";
@@ -27,9 +28,7 @@ export function IntelligencePageClient({ sp }: { sp: SearchParams }) {
     return (
       <>
         <IntelligenceHeader />
-        <div className="flex flex-1 items-center justify-center px-6 py-6">
-          <div className="h-8 w-8 rounded-full border-2 border-muted border-t-emerald-600 animate-spin" />
-        </div>
+        <LoadingSpinner />
       </>
     );
   }

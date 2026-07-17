@@ -1,6 +1,7 @@
 "use client";
 
 import { useSalesDataQuery } from "@/app/features/sales-data/salesDataQuery";
+import { LoadingSpinner } from "@/app/features/sales-data/LoadingSpinner";
 import { useRecordsFilter } from "../hooks/useRecordsFilter";
 import { RecordsHeader } from "./RecordsHeader";
 import { RecordsSummary } from "./RecordsSummary";
@@ -9,19 +10,18 @@ import { RecordsTable } from "./RecordsTable";
 import { RecordsPagination } from "./RecordsPagination";
 
 export function RecordsClient() {
-  const { data: allRecords } = useSalesDataQuery();
-  const {
-    view,
-    setView,
-    search,
-    setSearch,
-    page,
-    setPage,
-    totalPages,
-    records,
-    pageRecords,
-    summary,
-  } = useRecordsFilter(allRecords);
+  const { data: allRecords, isLoading } = useSalesDataQuery();
+  const { view, setView, search, setSearch, page, setPage, totalPages, records, pageRecords, summary } =
+    useRecordsFilter(allRecords);
+
+  if (isLoading) {
+    return (
+      <>
+        <RecordsHeader />
+        <LoadingSpinner />
+      </>
+    );
+  }
 
   return (
     <>
