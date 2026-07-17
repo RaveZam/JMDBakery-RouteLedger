@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { getAgentMap } from "@/app/server/getAgentMap";
 import { ChatMessage, GeminiContent } from "./handlers/types";
 import { handleChat } from "./handlers/intent";
 
@@ -8,10 +7,7 @@ export type { ChatMessage };
 
 export async function POST(req: NextRequest): Promise<Response> {
   const { messages }: { messages: ChatMessage[] } = await req.json();
-  const [supabase, agentMap] = await Promise.all([
-    createClient(),
-    getAgentMap(),
-  ]);
+  const supabase = await createClient();
 
   // Only keep user messages in history — drop model responses so Gemini
   // can't parrot back previous data and is forced to generate fresh SQL.
@@ -32,7 +28,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const stream = new ReadableStream({
     async start(controller): Promise<void> {
       try {
-        await handleChat(contents, supabase, controller, encoder, agentMap);
+        await handleChat(contents, supabase, controller, encoder);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         console.error("[chat route]", message, err);

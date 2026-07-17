@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { GeminiContent } from "./types";
-import { getSystemPrompt, AgentInfo } from "./system-prompt";
+import { getSystemPrompt } from "./system-prompt";
 import { validateSql } from "./sql-validators";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
@@ -17,9 +17,8 @@ export async function handleChat(
   supabase: SupabaseClient,
   controller: ReadableStreamDefaultController,
   encoder: TextEncoder,
-  agentMap: Record<string, AgentInfo>,
 ): Promise<void> {
-  const systemInstruction = getSystemPrompt(agentMap);
+  const systemInstruction = getSystemPrompt();
 
   const firstResponse = await ai.models.generateContent({
     model: MODEL,
@@ -83,7 +82,7 @@ export async function handleChat(
       role: "user",
       parts: [
         {
-          text: `Query results (this is the ONLY source of truth — do NOT invent, guess, or add any data not present here): ${JSON.stringify(data)}. Summarize ONLY what is in these results. Start by stating the exact date range queried. Use the exact names, numbers, and values from the results — never fabricate store names, agent names, or figures. If results contain conducted_by UUIDs, replace them with agent names from the AGENT MAP. Use plain language, no asterisks, no markdown bold.`,
+          text: `Query results (this is the ONLY source of truth — do NOT invent, guess, or add any data not present here): ${JSON.stringify(data)}. Summarize ONLY what is in these results. Start by stating the exact date range queried. Use the exact names, numbers, and values from the results — never fabricate store names, agent names, or figures. Use plain language, no asterisks, no markdown bold.`,
         },
       ],
     },

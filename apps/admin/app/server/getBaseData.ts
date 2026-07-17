@@ -38,7 +38,7 @@ type RawSession = {
   session_stores: RawSessionStore[];
 };
 
-const DATASET_WINDOW_MONTHS = 12;
+const DATASET_WINDOW_MONTHS = 1;
 
 function windowStartDate(): string {
   const d = new Date();
@@ -49,7 +49,6 @@ function windowStartDate(): string {
 function mapSessionStore(
   sessionStore: RawSessionStore,
   session: RawSession,
-  agent: string,
 ): SalesRecord[] {
   const store = sessionStore.stores?.store_name ?? "";
   const province = sessionStore.stores?.province ?? "";
@@ -59,7 +58,7 @@ function mapSessionStore(
     sessionId: session.id,
     date: session.session_date,
     createdAt: sale.created_at ?? null,
-    agent,
+    agent: session.conducted_by_name ?? "Unknown",
     store,
     province,
     product: sale.snapshot_product_name ?? "",
@@ -96,10 +95,12 @@ export const getSalesDataset = async (): Promise<SalesRecord[]> => {
 
   const rows = (data ?? []) as unknown as RawSession[];
 
-  return rows.flatMap((session) => {
-    const agent = session.conducted_by_name ?? "Unknown";
-    return session.session_stores.flatMap((sessionStore) =>
-      mapSessionStore(sessionStore, session, agent),
-    );
-  });
+  // Double flatMap un-nests session -> session_stores -> sales into one flat
+  // array of per-sale SalesRecord rows (each row still carries its session's
+  // date/agent and its store's name/province via mapSessionStore).
+  return rows.flatMap((session) =>
+    session.session_stores.flatMap((sessionStore) => {
+      return mapSessionStore(sessionStore, session);
+    }),
+  );
 };

@@ -36,7 +36,7 @@ export function validateSql(sql: string): string | null {
   const blockedHallucinations = ["users", "agents", "agent_lookup", "auth."];
   for (const table of blockedHallucinations) {
     if (normalized.includes(table)) {
-      return `Table "${table}" does not exist. Use the agent map to resolve agent names.`;
+      return `Table "${table}" does not exist. Use rs.conducted_by_name to resolve agent names.`;
     }
   }
 

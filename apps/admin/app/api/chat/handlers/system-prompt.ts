@@ -1,19 +1,11 @@
-export type AgentInfo = { name: string; email: string };
-
-export function getSystemPrompt(agentMap: Record<string, AgentInfo> = {}) {
+export function getSystemPrompt() {
   function phNow(): Date {
     const now = new Date();
     return new Date(now.getTime() + 8 * 60 * 60 * 1000);
   }
   const today = phNow();
 
-  const agentLines = Object.entries(agentMap)
-    .map(([id, info]) => `- ${id}: ${info.name}`)
-    .join("\n");
-
-  const agentSection = agentLines
-    ? `AGENT MAP (the ONLY source of agent info — there is NO agents, users, or agent_lookup table):\n${agentLines}\n\nAGENT QUERY RULES:\n- To filter by a specific agent: find their UUID in the map above, then use rs.conducted_by = '<uuid>'.\n- To list which agents were active / did deliveries / had sales in a period: query SELECT DISTINCT rs.conducted_by FROM route_sessions rs WHERE rs.session_date BETWEEN ... — then in your response, replace each UUID with the agent name from the map above.\n- You CAN answer "which agents", "list agents", "who was active" etc. Just query conducted_by and map UUIDs to names yourself using the AGENT MAP.`
-    : `The conducted_by column in route_sessions is a UUID. There is NO agents, users, or agent_lookup table. Agent names cannot be resolved without the agent map.`;
+  const agentSection = `AGENT QUERY RULES (there is NO agents, users, or agent_lookup table — agent name lives on route_sessions.conducted_by_name):\n- To filter by a specific agent: rs.conducted_by_name ILIKE '%<name>%'.\n- To list which agents were active / did deliveries / had sales in a period: SELECT DISTINCT rs.conducted_by_name FROM route_sessions rs WHERE rs.session_date BETWEEN ...\n- You CAN answer "which agents", "list agents", "who was active" etc. directly from rs.conducted_by_name — no lookup needed.`;
 
   return `
 You are a sales analytics assistant for JMD Bakery.
@@ -42,7 +34,7 @@ stores (alias: st)
 
 route_sessions (alias: rs)
   id text PK, route_name text, session_date date, conducted_by uuid,
-  status text, created_at timestamp
+  conducted_by_name text, status text, created_at timestamp
 
 session_stores (alias: ss)
   id text PK, route_session_id text FK->route_sessions.id,
@@ -72,7 +64,7 @@ SQL RULES:
 - When filtering by name (store_name, product_name, route_name, etc.), ALWAYS use ILIKE instead of = for case-insensitive matching. Example: st.store_name ILIKE '%santos%' instead of st.store_name = 'Santos Mini-Mart'.
 - This is PostgreSQL. NEVER use SQLite functions like strftime(). For date filtering use EXTRACT(YEAR FROM col), BETWEEN with date literals, or DATE_TRUNC(). Examples: EXTRACT(YEAR FROM s.created_at) = 2026, rs.session_date BETWEEN '2026-01-01' AND '2026-12-31'.
 - NEVER query tables not listed above. There is NO agents, users, agent_lookup, or auth table.
-- For ANY agent-related query (who delivered, which agent, list agents, etc.), ALWAYS use the AGENT MAP above. Never attempt to JOIN or SELECT from an agent/user table. Resolve names to UUIDs from the map, then filter with rs.conducted_by = '<uuid>'.
+- For ANY agent-related query (who delivered, which agent, list agents, etc.), use rs.conducted_by_name directly. Never attempt to JOIN or SELECT from an agent/user table.
 
 AGGREGATION RULES:
 - If the date range is 3 days or less: group by day (DATE_TRUNC('day', ...)).
