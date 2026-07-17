@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { RECORDS_PAGE_SIZE, type RecordView } from "../types";
 import { filterRecords } from "../helpers/filterRecords";
 import { computeRecordsSummary } from "../helpers/computeRecordsSummary";

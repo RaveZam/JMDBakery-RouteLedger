@@ -1,4 +1,4 @@
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { Card } from "@/components/ui/card";
 import { RecordRow } from "./RecordRow";
 import { RecordsTableHeader } from "./RecordsTableHeader";

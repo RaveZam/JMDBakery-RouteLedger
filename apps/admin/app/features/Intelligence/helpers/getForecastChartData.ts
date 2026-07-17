@@ -1,5 +1,5 @@
 import type { ForecastChartData, ForecastRange, DailySalesPoint } from "../types";
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { forecastNextWeek } from "./forecastNextWeek";
 import { forecastNextMonth } from "./forecastNextMonth";
 import { forecastNextYear } from "./forecastNextYear";

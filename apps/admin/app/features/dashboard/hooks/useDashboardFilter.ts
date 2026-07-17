@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { FilterRange } from "../types/dashboard-types";
 import { getDateRange } from "../helpers/getDateRange";
 

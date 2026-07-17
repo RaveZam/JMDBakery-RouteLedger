@@ -15,7 +15,7 @@ import {
   ReferenceArea,
 } from "recharts";
 import type { ForecastRange } from "../types";
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { getForecastChartData } from "../helpers/getForecastChartData";
 import { aggregateDailySales } from "../helpers/aggregateDailySales";
 

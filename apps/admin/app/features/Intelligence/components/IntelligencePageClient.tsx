@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useSalesDataQuery } from "@/app/features/sales-data/salesDataQuery";
-import { LoadingSpinner } from "@/app/features/sales-data/LoadingSpinner";
+import { useSalesDataQuery } from "@/app/server/salesData/useSalesDataQuery";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { parseRecordsFiltersLast30Days } from "@/lib/selectors/filters";
 import { computeIntelligenceKpis } from "../helpers/kpis";
 import { IntelligenceHeader } from "./IntelligenceHeader";

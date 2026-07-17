@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSalesDataset } from "@/app/server/getBaseData";
+import { getSalesDataset } from "@/app/server/salesData/getBaseData";
 
 export const SALES_DATASET_QUERY_KEY = ["sales-dataset"] as const;
 

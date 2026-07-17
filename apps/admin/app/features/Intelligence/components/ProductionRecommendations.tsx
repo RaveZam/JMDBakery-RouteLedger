@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { ChefHat } from "lucide-react";
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { Card } from "@/components/ui/card";
 import { computeProductionRecommendations } from "../helpers/computeProductionRecommendations";
 import { ProductionRecommendationsTable } from "./ProductionRecommendationsTable";

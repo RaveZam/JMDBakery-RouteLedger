@@ -1,7 +1,7 @@
 "use client";
 
-import { useSalesDataQuery } from "@/app/features/sales-data/salesDataQuery";
-import { LoadingSpinner } from "@/app/features/sales-data/LoadingSpinner";
+import { useSalesDataQuery } from "@/app/server/salesData/useSalesDataQuery";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useRecordsFilter } from "../hooks/useRecordsFilter";
 import { RecordsHeader } from "./RecordsHeader";
 import { RecordsSummary } from "./RecordsSummary";

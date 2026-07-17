@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { computeSalesTimeline } from "../helpers/computeSalesTimeline";
 import { formatCurrencyCompact } from "../helpers/formatCurrencyCompact";
 import { FilterRange } from "../types/dashboard-types";

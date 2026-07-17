@@ -6,8 +6,8 @@ import { ProductSoldVsBoChart } from "@/app/features/dashboard/components/Produc
 import { TopProductsSoldTable } from "@/app/features/dashboard/components/TopProductsSoldTable";
 import { SalesLineChart } from "@/app/features/dashboard/components/SalesLineChart";
 import { DashboardHeader } from "@/app/features/dashboard/components/DashboardHeader";
-import { useSalesDataQuery } from "@/app/features/sales-data/salesDataQuery";
-import { LoadingSpinner } from "@/app/features/sales-data/LoadingSpinner";
+import { useSalesDataQuery } from "@/app/server/salesData/useSalesDataQuery";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useDashboardFilter } from "../hooks/useDashboardFilter";
 
 export function DashboardClient() {

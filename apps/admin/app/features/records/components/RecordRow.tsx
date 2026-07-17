@@ -1,4 +1,4 @@
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import { formatCurrencyPHP } from "@/lib/utils";
 import { recordStatus, type RecordStatus } from "../helpers/recordStatus";
 

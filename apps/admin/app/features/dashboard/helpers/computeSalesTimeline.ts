@@ -1,4 +1,4 @@
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import type { FilterRange } from "../types/dashboard-types";
 import { formatHourLabel } from "./formatHourLabel";
 import { formatSalesXLabel } from "./formatSalesXLabel";

@@ -1,4 +1,4 @@
-import type { SalesRecord } from "@/app/server/getBaseData";
+import type { SalesRecord } from "@/app/server/salesData/getBaseData";
 import type { DailyTotal } from "../types";
 
 /** Collapses raw sales records into one revenue total per calendar day, sorted ascending. */
