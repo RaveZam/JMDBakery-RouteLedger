@@ -1,35 +1,50 @@
-const SEASON_LENGTH = 7; // weekly seasonality in a daily series
 const LEVEL_SMOOTHING = 0.3;
 const TREND_SMOOTHING = 0.05;
 const SEASONAL_SMOOTHING = 0.2;
 
-export const HOLT_WINTERS_MIN_HISTORY = SEASON_LENGTH * 2;
+/** Seasons of history needed before the model can be fitted: one to seed the
+ * seasonal indices and one to update them. Below this, seasonality and trend
+ * are not separable and the fit is meaningless. */
+export const HOLT_WINTERS_MIN_SEASONS = 2;
 
-/** Fits an additive Holt-Winters model (level + trend + weekly seasonality)
- * over a daily value series and returns a function that forecasts `horizon`
- * days past the end of the series. Requires at least two full weeks of
- * history to seed the seasonal component. */
-export function fitHoltWinters(values: number[]): (horizon: number) => number {
+/** Fits an additive Holt-Winters model (level + trend + seasonality) over an
+ * evenly spaced value series and returns a function forecasting `horizon`
+ * steps past the end of the series.
+ *
+ * `seasonLength` is in steps, not days -- 7 for a daily series with weekly
+ * seasonality, 12 for a monthly series with yearly seasonality. Callers must
+ * supply at least HOLT_WINTERS_MIN_SEASONS full seasons. */
+function seasonAverage(values: number[], season: number, length: number): number {
+  const start = season * length;
+  return (
+    values.slice(start, start + length).reduce((sum, v) => sum + v, 0) / length
+  );
+}
+
+type Smoothed = { level: number; trend: number; seasonal: number[] };
+
+/** Runs the Holt-Winters recursion over the series, returning the final level
+ * and trend plus the full seasonal index array. Seeds level and trend from the
+ * first two seasons, and the seasonal indices from deviations about the first. */
+function smooth(values: number[], seasonLength: number): Smoothed {
   const n = values.length;
 
-  const firstSeasonAvg =
-    values.slice(0, SEASON_LENGTH).reduce((sum, v) => sum + v, 0) / SEASON_LENGTH;
+  const firstSeasonAvg = seasonAverage(values, 0, seasonLength);
   const secondSeasonAvg =
-    n >= SEASON_LENGTH * 2
-      ? values.slice(SEASON_LENGTH, SEASON_LENGTH * 2).reduce((sum, v) => sum + v, 0) /
-        SEASON_LENGTH
+    n >= seasonLength * 2
+      ? seasonAverage(values, 1, seasonLength)
       : firstSeasonAvg;
 
   let level = firstSeasonAvg;
-  let trend = (secondSeasonAvg - firstSeasonAvg) / SEASON_LENGTH;
+  let trend = (secondSeasonAvg - firstSeasonAvg) / seasonLength;
 
   const seasonal = new Array(n).fill(0);
-  for (let i = 0; i < SEASON_LENGTH; i++) {
+  for (let i = 0; i < seasonLength; i++) {
     seasonal[i] = values[i] - firstSeasonAvg;
   }
 
-  for (let t = SEASON_LENGTH; t < n; t++) {
-    const priorSeasonalIdx = t - SEASON_LENGTH;
+  for (let t = seasonLength; t < n; t++) {
+    const priorSeasonalIdx = t - seasonLength;
     const previousLevel = level;
     level =
       LEVEL_SMOOTHING * (values[t] - seasonal[priorSeasonalIdx]) +
@@ -41,8 +56,19 @@ export function fitHoltWinters(values: number[]): (horizon: number) => number {
       (1 - SEASONAL_SMOOTHING) * seasonal[priorSeasonalIdx];
   }
 
-  const finalLevel = level;
-  const finalTrend = trend;
+  return { level, trend, seasonal };
+}
+
+export function fitHoltWinters(
+  values: number[],
+  seasonLength: number,
+): (horizon: number) => number {
+  const n = values.length;
+  const SEASON_LENGTH = seasonLength;
+  const { level: finalLevel, trend: finalTrend, seasonal } = smooth(
+    values,
+    SEASON_LENGTH,
+  );
 
   return (horizon: number) => {
     const seasonalIdx = n - SEASON_LENGTH + ((horizon - 1) % SEASON_LENGTH);

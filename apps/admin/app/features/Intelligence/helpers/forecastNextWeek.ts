@@ -1,64 +1,47 @@
-import type { DataPoint, ForecastChartData } from "../types";
-import type { SalesRecord } from "@/app/server/salesData/getBaseData";
-import { nowInManila, toDateKey } from "./dateUtils";
+import type { DataPoint, ForecastChartData, SalesPoint } from "../types";
+import { nowInManila, toDateKey, addDays } from "./dateUtils";
 import { computeForecastBounds } from "./computeForecastBounds";
 
-export function forecastNextWeek(data: SalesRecord[]): ForecastChartData {
-  const sevenDayForecastData: DataPoint[] = [];
+const DAYS_SHOWN = 7;
+const DAYS_FORECAST = 7;
 
-  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-    const dateToFind = nowInManila();
-    dateToFind.setDate(dateToFind.getDate() - dayOffset);
-    const dateToFindStr = toDateKey(dateToFind);
+const yFormatter = (v: number): string => `₱${(v / 1000).toFixed(0)}k`;
 
-    const salesThatDate = data.filter((item) => item.date === dateToFindStr);
-    const totalSalesThatDay = salesThatDate.reduce(
-      (sum, r) => r.total + sum,
-      0,
-    );
+export function forecastNextWeek(daily: SalesPoint[]): ForecastChartData {
+  const revenueByDate = new Map(daily.map((d) => [d.period, d.total_sales]));
 
-    sevenDayForecastData.push({
-      label: dateToFindStr,
-      actual: totalSalesThatDay,
-    });
+  const weekdayTotals = new Map<number, { revenue: number; days: number }>();
+  for (const point of daily) {
+    const weekday = new Date(point.period).getUTCDay();
+    const existing = weekdayTotals.get(weekday);
+    if (existing) {
+      existing.revenue += point.total_sales;
+      existing.days += 1;
+    } else {
+      weekdayTotals.set(weekday, { revenue: point.total_sales, days: 1 });
+    }
+  }
+  const today = nowInManila();
+  const data: DataPoint[] = [];
 
-    const dateToForecast = nowInManila();
-    dateToForecast.setDate(dateToForecast.getDate() + dayOffset + 1);
-    const dateToForecastStr = toDateKey(dateToForecast);
-    const dayOfTheSalesToForecast = dateToForecast.getDay();
+  for (let offset = DAYS_SHOWN - 1; offset >= 0; offset--) {
+    const label = toDateKey(addDays(today, -offset));
+    data.push({ label, actual: revenueByDate.get(label) ?? 0 });
+  }
 
-    const salesThatDayOfTheWeekInTheMonth = data.filter(
-      (item) => new Date(item.date).getDay() === dayOfTheSalesToForecast,
-    );
-
-    const totalSalesOfThatDayThePastMonth = salesThatDayOfTheWeekInTheMonth.reduce(
-      (sum, r) => r.total + sum,
-      0,
-    );
-
-    const numberOfThatDayConductedInTheMonth = new Set(
-      salesThatDayOfTheWeekInTheMonth.map((r) => r.date),
-    ).size;
-
-    const forecastOfNextWeekOnThatDay =
-      totalSalesOfThatDayThePastMonth === 0
-        ? 0
-        : totalSalesOfThatDayThePastMonth / numberOfThatDayConductedInTheMonth;
-
-    sevenDayForecastData.push({
-      label: dateToForecastStr,
-      forecast: forecastOfNextWeekOnThatDay,
+  for (let offset = 1; offset <= DAYS_FORECAST; offset++) {
+    const date = addDays(today, offset);
+    const weekday = weekdayTotals.get(date.getUTCDay());
+    data.push({
+      label: toDateKey(date),
+      forecast: weekday ? Math.round(weekday.revenue / weekday.days) : 0,
     });
   }
 
-  const sortedData = sevenDayForecastData.sort((a, b) =>
-    a.label.localeCompare(b.label),
-  );
-
   return {
     title: "7-day revenue forecast",
-    ...computeForecastBounds(sortedData),
-    yFormatter: (v) => `₱${(v / 1000).toFixed(0)}k`,
-    data: sortedData,
+    ...computeForecastBounds(data),
+    yFormatter,
+    data,
   };
 }

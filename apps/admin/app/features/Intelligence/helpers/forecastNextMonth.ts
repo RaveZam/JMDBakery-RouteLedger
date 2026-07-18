@@ -1,92 +1,81 @@
-import type { ForecastChartData, DataPoint, DailySalesPoint } from "../types";
+import type { DataPoint, ForecastChartData, SalesPoint } from "../types";
 import * as ss from "simple-statistics";
-import { MONTH_LABELS, nowInManila } from "./dateUtils";
+import { MONTH_LABELS, nowInManila, toDateKey, addDays } from "./dateUtils";
 import { computeForecastBounds } from "./computeForecastBounds";
 
-const WEEK_START_DAY = [1, 8, 15, 22];
+const WEEKS_PER_MONTH = 4;
+const ACTUALS_WINDOW_DAYS = 31;
 
-function getWeekOfMonth(day: number): number {
-  if (day <= 7) return 1;
-  if (day <= 14) return 2;
-  if (day <= 21) return 3;
-  return 4;
-}
-function getWeekStart(date: Date): Date {
-  const week = getWeekOfMonth(date.getDate());
-  return new Date(date.getFullYear(), date.getMonth(), WEEK_START_DAY[week - 1]);
+const yFormatter = (v: number): string => `₱${(v / 1000).toFixed(0)}k`;
+
+/** Week-of-month for a day, 1-4. The last week absorbs days 29-31. */
+function weekOfMonth(day: number): number {
+  return Math.min(WEEKS_PER_MONTH, Math.floor((day - 1) / 7) + 1);
 }
 
-export function forecastNextMonth(dailySales: DailySalesPoint[]): ForecastChartData {
-  const weeklyDateForThePastYear: { label: string; actual: number }[] = [];
-  const nextMonthForecastData: DataPoint[] = [];
-  const offsetDate = nowInManila();
-  offsetDate.setDate(offsetDate.getDate() - 31);
-  const startingDate = getWeekStart(offsetDate);
+function weekStart(date: Date): Date {
+  const week = weekOfMonth(date.getUTCDate());
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1 + (week - 1) * 7),
+  );
+}
+
+function weekLabel(period: string): string {
+  const date = new Date(period);
+  return `${MONTH_LABELS[date.getUTCMonth()]} W${weekOfMonth(date.getUTCDate())}`;
+}
+
+function projectedWeeks(
+  line: (x: number) => number,
+  historyLength: number,
+  now: Date,
+): DataPoint[] {
+  const monthName = MONTH_LABELS[now.getUTCMonth()];
+  const nextMonthName = MONTH_LABELS[(now.getUTCMonth() + 1) % 12];
+
+  const labels: string[] = [];
+  for (
+    let week = weekOfMonth(now.getUTCDate());
+    week <= WEEKS_PER_MONTH;
+    week++
+  ) {
+    labels.push(`${monthName} W${week}`);
+  }
+  labels.push(`${nextMonthName} W1`);
+
+  return labels.map((label, step) => ({
+    label,
+    forecast: Math.max(0, Math.round(line(historyLength + step))),
+  }));
+}
+
+export function forecastNextMonth(weekly: SalesPoint[]): ForecastChartData {
+  const title = "Next Month Revenue Forecast";
   const now = nowInManila();
-  const cutoffDate = getWeekStart(now);
-  const cutoffMonth = cutoffDate.getMonth();
-  const nextMonthName = MONTH_LABELS[cutoffMonth];
 
-  for (const record of dailySales ?? []) {
-    const date = new Date(record.sale_date.split("T")[0]);
-    const day = date.getDate();
-    const monthIdx = date.getMonth();
-    const monthLabel = MONTH_LABELS[monthIdx];
-    const week = getWeekOfMonth(day);
-    const label = `${monthLabel} W${week}`;
+  // The in-progress week is partial, so including it would drag the trend down
+  // and plot a misleadingly low bar for "this week".
+  const currentWeek = toDateKey(weekStart(now));
+  const history = weekly.filter((w) => w.period < currentWeek);
 
-    if (date < cutoffDate) {
-      const existing = weeklyDateForThePastYear.find((w) => w.label === label);
-      if (existing) {
-        existing.actual += record.total_sales;
-      } else {
-        weeklyDateForThePastYear.push({ label, actual: record.total_sales });
-      }
-    }
-
-    if (startingDate < date && date < cutoffDate) {
-      const chartExisting = nextMonthForecastData.find(
-        (w) => w.label === label,
-      );
-      if (chartExisting) {
-        chartExisting.actual = (chartExisting.actual ?? 0) + record.total_sales;
-      } else {
-        nextMonthForecastData.push({ label, actual: record.total_sales });
-      }
-    }
+  if (history.length < 2) {
+    return { title, forecastStart: "", forecastEnd: "", yFormatter, data: [] };
   }
 
-  const points = weeklyDateForThePastYear.map((d, i) => [i, d.actual]);
-  const reg = ss.linearRegression(points);
-  const line = ss.linearRegressionLine(reg);
-
-  // display the remaining weeks of current month + 1 week into next month as forecast
-  const nextWeekStartIndex = weeklyDateForThePastYear.length;
-  const currentWeek = getWeekOfMonth(cutoffDate.getDate());
-  const followingMonthName = MONTH_LABELS[(cutoffMonth + 1) % 12];
-  for (let i = currentWeek; i <= 4; i++) {
-    nextMonthForecastData.push({
-      label: `${nextMonthName} W${i}`,
-      forecast: Math.round(line(nextWeekStartIndex + (i - currentWeek))),
-    });
-  }
-  const weeksForecasted = 4 - currentWeek + 1;
-  nextMonthForecastData.push({
-    label: `${followingMonthName} W1`,
-    forecast: Math.round(line(nextWeekStartIndex + weeksForecasted)),
-  });
-
-  const data = nextMonthForecastData.sort(
-    (a, b) =>
-      MONTH_LABELS.indexOf(a.label.split(" ")[0]) -
-        MONTH_LABELS.indexOf(b.label.split(" ")[0]) ||
-      a.label.localeCompare(b.label),
+  const line = ss.linearRegressionLine(
+    ss.linearRegression(history.map((w, i) => [i, w.total_sales])),
   );
 
-  return {
-    title: "Next Month Revenue Forecast",
-    ...computeForecastBounds(data),
-    yFormatter: (v) => `₱${(v / 1000).toFixed(0)}k`,
-    data,
-  };
+  const windowStart = toDateKey(weekStart(addDays(now, -ACTUALS_WINDOW_DAYS)));
+
+  // Appended in chronological order, so no re-sort is needed -- sorting by
+  // month name would misorder a December-to-January span.
+  const data: DataPoint[] = [
+    ...history
+      .filter((w) => w.period >= windowStart)
+      .map((w) => ({ label: weekLabel(w.period), actual: w.total_sales })),
+    ...projectedWeeks(line, history.length, now),
+  ];
+
+  return { title, ...computeForecastBounds(data), yFormatter, data };
 }

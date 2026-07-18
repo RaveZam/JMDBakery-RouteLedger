@@ -1,15 +1,15 @@
-import type { ForecastChartData, ForecastRange, DailySalesPoint } from "../types";
-import type { SalesRecord } from "@/app/server/salesData/getBaseData";
+import type { ForecastChartData, ForecastRange, SalesPoint } from "../types";
 import { forecastNextWeek } from "./forecastNextWeek";
 import { forecastNextMonth } from "./forecastNextMonth";
 import { forecastNextYear } from "./forecastNextYear";
 
+/** Each range is fed by its own RPC, so `points` arrives already bucketed to
+ * match: daily for weekly, weekly for monthly, monthly for yearly. */
 export function getForecastChartData(
   range: ForecastRange,
-  records: SalesRecord[],
-  dailySales: DailySalesPoint[],
+  points: SalesPoint[],
 ): ForecastChartData {
-  if (range === "monthly") return forecastNextMonth(dailySales);
-  if (range === "yearly") return forecastNextYear(dailySales);
-  return forecastNextWeek(records);
+  if (range === "monthly") return forecastNextMonth(points);
+  if (range === "yearly") return forecastNextYear(points);
+  return forecastNextWeek(points);
 }

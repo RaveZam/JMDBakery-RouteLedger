@@ -8,6 +8,10 @@ export type DataPoint = {
   forecast?: number;
 };
 
+/** A DataPoint prepared for Recharts. `isSeam` marks the bridged point whose
+ * forecast value is a copy of its actual. */
+export type ChartPoint = DataPoint & { isSeam?: boolean };
+
 export interface ForecastChartData {
   title: string;
   data: DataPoint[];
@@ -16,13 +20,7 @@ export interface ForecastChartData {
   yFormatter: (v: number) => string;
 }
 
-/** A single day's aggregated revenue + order count, used as input to the
- * monthly/yearly forecast models. */
-export type DailySalesPoint = {
-  sale_date: string;
-  total_sales: number;
-  order_count: number;
-};
+export type { SalesPoint } from "@/app/server/salesData/getForecastSeries";
 
 /** A single day's revenue, used by the KPI helpers. */
 export type DailyTotal = {

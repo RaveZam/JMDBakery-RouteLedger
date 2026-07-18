@@ -1,56 +1,60 @@
-import type { ForecastChartData, DataPoint, DailySalesPoint } from "../types";
-import { MONTH_LABELS, nowInManila, addDays } from "./dateUtils";
+import type { DataPoint, ForecastChartData, SalesPoint } from "../types";
+import { MONTH_LABELS, nowInManila, toDateKey } from "./dateUtils";
 import { computeForecastBounds } from "./computeForecastBounds";
-import { fitHoltWinters, HOLT_WINTERS_MIN_HISTORY } from "./holtWinters";
+import { fitHoltWinters, HOLT_WINTERS_MIN_SEASONS } from "./holtWinters";
 
-export function forecastNextYear(dailySales: DailySalesPoint[]): ForecastChartData {
+const MONTHS_PER_SEASON = 12;
+const MONTHS_REQUIRED = MONTHS_PER_SEASON * HOLT_WINTERS_MIN_SEASONS;
+
+const yFormatter = (v: number): string => `₱${(v / 1000).toFixed(0)}k`;
+
+function monthKey(year: number, month: number): string {
+  return toDateKey(new Date(Date.UTC(year, month, 1)));
+}
+
+function completedMonths(
+  revenueByMonth: Map<string, number>,
+  year: number,
+  month: number,
+): number[] {
+  const values: number[] = [];
+  for (let ago = MONTHS_REQUIRED; ago >= 1; ago--) {
+    values.push(revenueByMonth.get(monthKey(year, month - ago)) ?? 0);
+  }
+  return values;
+}
+
+export function forecastNextYear(monthly: SalesPoint[]): ForecastChartData {
   const title = "Yearly Revenue Forecast (Holt-Winters)";
-  const yFormatter = (v: number) => `₱${(v / 1000).toFixed(0)}k`;
 
-  if (dailySales.length < HOLT_WINTERS_MIN_HISTORY) {
+  if (monthly.length < MONTHS_REQUIRED) {
     return { title, forecastStart: "", forecastEnd: "", yFormatter, data: [] };
   }
 
   const now = nowInManila();
-  const yearNow = now.getFullYear();
-  const cutoffDate = new Date(yearNow, now.getMonth(), now.getDate());
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
 
-  const actualByMonth = new Map<string, number>();
-  for (const point of dailySales) {
-    const date = new Date(point.sale_date.split("T")[0]);
-    if (date.getFullYear() !== yearNow || date >= cutoffDate) continue;
-    const label = MONTH_LABELS[date.getMonth()];
-    actualByMonth.set(label, (actualByMonth.get(label) ?? 0) + point.total_sales);
-  }
-
-  const forecastFn = fitHoltWinters(dailySales.map((d) => d.total_sales));
-  const lastDate = new Date(
-    dailySales[dailySales.length - 1].sale_date.split("T")[0],
-  );
-  const endOfYear = new Date(yearNow, 11, 31);
-  const daysToForecast = Math.max(
-    1,
-    Math.round((endOfYear.getTime() - lastDate.getTime()) / 86_400_000),
+  const revenueByMonth = new Map(monthly.map((m) => [m.period, m.total_sales]));
+  const forecastFn = fitHoltWinters(
+    completedMonths(revenueByMonth, year, month),
+    MONTHS_PER_SEASON,
   );
 
-  const forecastByMonth = new Map<string, number>();
-  for (let h = 1; h <= daysToForecast; h++) {
-    const date = addDays(lastDate, h);
-    if (date.getFullYear() !== yearNow) break;
-    const label = MONTH_LABELS[date.getMonth()];
-    forecastByMonth.set(label, (forecastByMonth.get(label) ?? 0) + forecastFn(h));
+  const data: DataPoint[] = [];
+  for (let m = 0; m < month; m++) {
+    data.push({
+      label: MONTH_LABELS[m],
+      actual: revenueByMonth.get(monthKey(year, m)) ?? 0,
+    });
   }
 
-  const orderedLabels = [
-    ...new Set([...actualByMonth.keys(), ...forecastByMonth.keys()]),
-  ];
-  const data: DataPoint[] = orderedLabels.map((label) => ({
-    label,
-    actual: actualByMonth.get(label),
-    forecast: forecastByMonth.has(label)
-      ? Math.round(forecastByMonth.get(label)!)
-      : undefined,
-  }));
+  for (let horizon = 1; horizon <= MONTHS_PER_SEASON - month; horizon++) {
+    data.push({
+      label: MONTH_LABELS[month + horizon - 1],
+      forecast: Math.max(0, Math.round(forecastFn(horizon))),
+    });
+  }
 
   return { title, ...computeForecastBounds(data), yFormatter, data };
 }
