@@ -52,20 +52,31 @@ function StoreEntryList({
   );
 }
 
+function DetailHeadline({ session }: { session: SessionRow }): ReactElement {
+  return (
+    <div>
+      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gold">
+        Route detail
+      </p>
+      <CardTitle className="mt-1 text-base">{session.routeName}</CardTitle>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {formatSessionDate(session.sessionDate)} &middot;{" "}
+        <span className="font-[family-name:var(--font-mono)] font-medium tabular-nums text-foreground">
+          {visitRate(session.visitedStores, session.totalStores)}
+        </span>{" "}
+        of stops covered
+      </p>
+    </div>
+  );
+}
+
 export function SessionDetail({ session }: { session: SessionRow }): ReactElement {
-  const rate = visitRate(session.visitedStores, session.totalStores);
   const [inventoryOpen, setInventoryOpen] = useState(false);
 
   return (
-    <Card className="shadow-sm">
+    <Card className="border-border/70 shadow-soft dark:shadow-soft-dark">
       <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
-        <div>
-          <CardTitle className="text-base">{session.routeName}</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {formatSessionDate(session.sessionDate)} &middot;{" "}
-            <span className="font-medium text-foreground">{rate}</span> visit rate
-          </p>
-        </div>
+        <DetailHeadline session={session} />
         <Button
           type="button"
           variant="outline"

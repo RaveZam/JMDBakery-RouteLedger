@@ -3,29 +3,29 @@
 import type { ReactElement } from "react";
 
 import { useSessionsQuery } from "./sessionsQuery";
+import { summarizeSessions } from "./helpers/sessionsBoard";
 import { SessionsList } from "./components/SessionsList";
+import { SessionsHeader } from "./components/SessionsHeader";
+import { SessionsSummary } from "./components/SessionsSummary";
 import { SessionsBoardSkeleton } from "./components/SessionsBoardSkeleton";
 
 export function SessionsPage(): ReactElement {
   const { data: sessions, isLoading } = useSessionsQuery();
+  const summary = summarizeSessions(sessions);
 
   return (
     <>
-      <header className="sticky top-0 z-20 border-b bg-slate-50/80 px-6 py-5 backdrop-blur dark:bg-background/80">
-        <div className="mx-auto w-full max-w-[1200px]">
-          <h1 className="text-3xl font-semibold tracking-tight">Sessions</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Field activity monitor. Track agent route sessions.
-          </p>
-        </div>
-      </header>
+      <SessionsHeader summary={summary} />
 
       <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="mx-auto w-full max-w-[1200px]">
+        <div className="mx-auto w-full max-w-[1200px] space-y-6">
           {isLoading ? (
             <SessionsBoardSkeleton />
           ) : (
-            <SessionsList sessions={sessions} />
+            <>
+              <SessionsSummary summary={summary} />
+              <SessionsList sessions={sessions} />
+            </>
           )}
         </div>
       </div>

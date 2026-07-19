@@ -1,55 +1,34 @@
 "use client";
 
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 
+import { useSessionsBoard } from "../hooks/useSessionsBoard";
+import type { SessionFilter } from "../helpers/sessionsBoard";
 import type { SessionRow } from "../types/session-types";
 import { SessionCard } from "./SessionCard";
 import { SessionDetail } from "./SessionDetail";
+import { SessionsFilterBar } from "./SessionsFilterBar";
+import { SessionsPagination } from "./SessionsPagination";
 
-const PAGE_SIZE = 10;
-
-function EmptyState(): ReactElement {
+function EmptyBoard(): ReactElement {
   return (
-    <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
-      <CalendarDays className="h-10 w-10 opacity-50" />
-      <p className="text-sm">No sessions recorded yet.</p>
-      <p className="text-xs">
-        Sessions will appear here once agents start their routes.
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/70 py-16 text-center">
+      <CalendarDays className="h-9 w-9 text-muted-foreground/40" />
+      <p className="text-sm font-medium">No sessions yet</p>
+      <p className="max-w-xs text-xs text-muted-foreground">
+        The first route an agent starts on the mobile app shows up here.
       </p>
     </div>
   );
 }
 
-function PaginationControls({
-  page,
-  totalPages,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}): ReactElement {
+function EmptyFilter({ filter }: { filter: SessionFilter }): ReactElement {
   return (
-    <div className="flex items-center justify-between pt-2">
-      <button
-        onClick={() => onPageChange(Math.max(1, page - 1))}
-        disabled={page === 1}
-        className="flex items-center gap-1 text-sm disabled:opacity-40"
-      >
-        <ChevronLeft className="h-4 w-4" /> Previous
-      </button>
-      <span className="text-xs text-muted-foreground">
-        Page {page} of {totalPages}
-      </span>
-      <button
-        onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-        disabled={page === totalPages}
-        className="flex items-center gap-1 text-sm disabled:opacity-40"
-      >
-        Next <ChevronRight className="h-4 w-4" />
-      </button>
+    <div className="rounded-xl border border-dashed border-border/70 py-12 text-center text-sm text-muted-foreground">
+      {filter === "ongoing"
+        ? "No route is running right now."
+        : "No completed sessions to show."}
     </div>
   );
 }
@@ -57,78 +36,65 @@ function PaginationControls({
 function DetailPanel({ session }: { session: SessionRow | null }): ReactElement {
   if (!session) {
     return (
-      <div className="hidden items-center justify-center rounded-2xl border border-dashed py-20 text-sm text-muted-foreground xl:flex">
-        Select a session to view store details
+      <div className="hidden flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/70 py-24 text-center xl:flex">
+        <MapPin className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-sm font-medium">Pick a session</p>
+        <p className="max-w-[15rem] text-xs text-muted-foreground">
+          Open one to see every stop on the route and what was sold there.
+        </p>
       </div>
     );
   }
   return <SessionDetail session={session} />;
 }
 
-function SessionCardList({
-  sessions,
+function SessionColumn({
   page,
-  selectedId,
-  onSelect,
-  onPageChange,
-}: {
-  sessions: SessionRow[];
-  page: number;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  onPageChange: (page: number) => void;
-}): ReactElement {
-  const totalPages = Math.ceil(sessions.length / PAGE_SIZE);
-  const paginated = sessions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
+  selection,
+}: Pick<ReturnType<typeof useSessionsBoard>, "page" | "selection">): ReactElement {
   return (
     <div className="space-y-3">
-      <p className="text-xs font-medium tracking-wider text-muted-foreground">
-        ALL SESSIONS ({sessions.length})
-      </p>
-      {paginated.map((session) => (
+      {page.sessions.map((session) => (
         <SessionCard
           key={session.id}
           session={session}
-          isSelected={session.id === selectedId}
-          onClick={() => onSelect(session.id)}
+          isSelected={session.id === selection.id}
+          onClick={() => selection.onToggle(session.id)}
         />
       ))}
-      {totalPages > 1 && (
-        <PaginationControls
-          page={page}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
+      {page.total > 1 && (
+        <SessionsPagination
+          page={page.current}
+          totalPages={page.total}
+          onPageChange={page.onChange}
         />
       )}
     </div>
   );
 }
 
-export function SessionsList({ sessions }: { sessions: SessionRow[] }): ReactElement {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+export function SessionsList({
+  sessions,
+}: {
+  sessions: SessionRow[];
+}): ReactElement {
+  const board = useSessionsBoard(sessions);
 
-  useEffect(() => {
-    setPage(1);
-  }, [sessions]);
-
-  if (sessions.length === 0) return <EmptyState />;
-
-  const selected = sessions.find((s) => s.id === selectedId) ?? null;
+  if (sessions.length === 0) return <EmptyBoard />;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-      <SessionCardList
-        sessions={sessions}
-        page={page}
-        selectedId={selectedId}
-        onSelect={(id) => setSelectedId((current) => (current === id ? null : id))}
-        onPageChange={setPage}
-      />
-      <div className="xl:sticky xl:top-6 xl:self-start">
-        <DetailPanel session={selected} />
-      </div>
+    <div className="space-y-4">
+      <SessionsFilterBar filter={board.filter} />
+      {board.filter.count === 0 ? (
+        <EmptyFilter filter={board.filter.value} />
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <SessionColumn page={board.page} selection={board.selection} />
+          <div className="xl:sticky xl:top-6 xl:self-start">
+            <DetailPanel session={board.selection.session} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
