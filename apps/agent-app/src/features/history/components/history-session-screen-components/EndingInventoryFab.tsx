@@ -20,7 +20,7 @@ export function EndingInventoryFab({ tab }: Props) {
       activeOpacity={0.85}
       onPress={() =>
         router.push({
-          pathname: "/main/routes/ending-inventory",
+          pathname: "/main/history/ending-inventory",
           params: {
             sessionId: session.sessionId,
             routeName: session.data?.route_name ?? "",

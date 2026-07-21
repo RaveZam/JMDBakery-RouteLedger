@@ -47,7 +47,7 @@ export function InventoryComparisonSection() {
             hitSlop={8}
             onPress={() =>
               router.push({
-                pathname: "/main/routes/ending-inventory",
+                pathname: "/main/history/ending-inventory",
                 params: {
                   sessionId: session.sessionId,
                   routeName: session.data?.route_name ?? "",
