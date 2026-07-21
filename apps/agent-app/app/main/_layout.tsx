@@ -7,9 +7,11 @@ import { Colors } from "@/src/shared/constants/Colors";
 type IconProps = { color: string; size: number; focused: boolean };
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
-function hideOnNonIndex({ route }: { route: object }): { display: "none" } | undefined {
+const tabBarBaseStyle = { backgroundColor: "#FFFFFF", borderTopColor: Colors.light.border };
+
+function hideOnNonIndex({ route }: { route: object }) {
   const name = getFocusedRouteNameFromRoute(route) ?? "index";
-  return name !== "index" ? { display: "none" } : undefined;
+  return name !== "index" ? { ...tabBarBaseStyle, display: "none" as const } : tabBarBaseStyle;
 }
 
 const tabIcon =
@@ -24,7 +26,7 @@ export default function MainTabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: Colors.light.tabIconSelected,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
-        tabBarStyle: { backgroundColor: "#FFFFFF", borderTopColor: Colors.light.border },
+        tabBarStyle: tabBarBaseStyle,
       }}
     >
       <Tabs.Screen
