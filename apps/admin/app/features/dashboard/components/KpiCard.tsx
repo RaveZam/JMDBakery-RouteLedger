@@ -24,6 +24,7 @@ const solidTone: Partial<Record<KpiCardTone, string>> = {
 export function KpiCard({
   title,
   primary,
+  unit,
   secondary,
   tone = "neutral",
   accent = "green",
@@ -31,6 +32,7 @@ export function KpiCard({
 }: {
   title: string;
   primary: string;
+  unit?: string;
   secondary?: string;
   tone?: KpiCardTone;
   accent?: KpiCardAccent;
@@ -65,8 +67,18 @@ export function KpiCard({
             </span>
           )}
         </div>
-        <p className="mt-3 text-[28px] font-semibold leading-none tracking-tight tabular-nums">
+        <p className="mt-3 flex items-baseline gap-1.5 text-[28px] font-semibold leading-none tracking-tight tabular-nums">
           {primary}
+          {unit && (
+            <span
+              className={cn(
+                "text-[13px] font-medium tracking-normal",
+                solid ? "text-white/70" : "text-muted-foreground",
+              )}
+            >
+              {unit}
+            </span>
+          )}
         </p>
         {secondary ? (
           <p

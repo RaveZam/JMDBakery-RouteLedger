@@ -38,7 +38,8 @@ export function KpiStrip({ data, filter }: { data: SalesKpiRecord[]; filter: Fil
       />
       <KpiCard
         title={`Total Sold · ${label}`}
-        primary={totalSold.toLocaleString() + " pcs"}
+        primary={totalSold.toLocaleString()}
+        unit="pcs"
         accent="gold"
         icon={ShoppingBag}
       />
@@ -53,8 +54,11 @@ export function KpiStrip({ data, filter }: { data: SalesKpiRecord[]; filter: Fil
                 <PackageX className="h-[18px] w-[18px]" />
               </span>
             </div>
-            <p className="mt-3 text-[28px] font-semibold leading-none tracking-tight tabular-nums">
-              {Number(totalBO).toLocaleString() + " pcs"}
+            <p className="mt-3 flex items-baseline gap-1.5 text-[28px] font-semibold leading-none tracking-tight tabular-nums">
+              {Number(totalBO).toLocaleString()}
+              <span className="text-[13px] font-medium tracking-normal text-muted-foreground">
+                pcs
+              </span>
             </p>
           </div>
           <div className="h-16 w-px shrink-0 bg-border" />
