@@ -5,6 +5,7 @@ import EndingInventoryDao from "@/src/lib/dao/ending-inventory-dao";
 import { countSoldByProduct } from "@/src/features/store/core/count-sold-by-product";
 import { computeRemaining } from "@/src/features/store/core/compute-remaining";
 import { getSalesByRouteSession } from "@/src/features/store/services/sales-services";
+import { useSnackbar } from "@/src/shared/hooks/useSnackbar";
 import { upsertEndingInventoryQty } from "../services/ending-inventory-save-service";
 import { mergeEndingInventoryRows } from "../core/merge-ending-inventory-rows";
 import type { EndingInventoryRow } from "../types/ending-inventory-types";
@@ -38,6 +39,7 @@ export function useEndingInventory() {
 
   const [items, setItems] = useState<EndingInventoryRow[]>([]);
   const [saving, setSaving] = useState(false);
+  const { showSuccess } = useSnackbar();
 
   const load = useCallback(() => {
     if (!sessionId) return;
@@ -114,10 +116,11 @@ export function useEndingInventory() {
         }),
       }));
       setItems(persisted);
+      showSuccess("Ending inventory saved");
     } finally {
       setSaving(false);
     }
-  }, [sessionId, items]);
+  }, [sessionId, items, showSuccess]);
 
   return {
     endingInventory: { sessionId, routeName, items, saving, updateQty, save },
