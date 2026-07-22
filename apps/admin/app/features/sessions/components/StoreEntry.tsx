@@ -30,7 +30,7 @@ function StoreEntryHeader({
         </p>
       </div>
       <Badge variant={store.visited ? "success" : "pending"}>
-        {store.visited ? "Visited" : "Pending"}
+        {store.visited ? "Visited" : "Not Visited"}
       </Badge>
       {expanded ? (
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
