@@ -9,7 +9,7 @@ import {
 import { Route } from "../types/routes-type";
 
 export function useRoute() {
-  const [routes, setRoutes] = useState<Route[]>([]);
+  const [routes, setRoutes] = useState<Route[]>(() => getRoutes());
   const [pending, setPending] = useState<Route | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
