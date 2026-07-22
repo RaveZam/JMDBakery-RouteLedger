@@ -14,11 +14,11 @@ export function Snackbar({ visible, message }: SnackbarProps) {
 
   return (
     <View
-      style={[styles.container, { bottom: insets.bottom + 16 }]}
+      style={[styles.container, { top: insets.top + 12 }]}
       pointerEvents="none"
     >
       <View style={styles.pill}>
-        <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+        <Ionicons name="checkmark-circle" size={18} color="#0b4c29" />
         <Text style={styles.message} numberOfLines={2}>
           {message}
         </Text>
@@ -30,27 +30,27 @@ export function Snackbar({ visible, message }: SnackbarProps) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    left: 16,
     right: 16,
-    alignItems: "center",
+    left: 16,
+    alignItems: "flex-end",
   },
   pill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#0b4c29",
+    backgroundColor: "rgba(134, 239, 172, 0.85)",
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 16,
     maxWidth: "100%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 4,
   },
   message: {
-    color: "#FFFFFF",
+    color: "#0b4c29",
     fontSize: 14,
     fontWeight: "600",
     flexShrink: 1,
