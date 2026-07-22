@@ -39,6 +39,7 @@ export default function RootLayout() {
 
     runOutboxSync();
 
+    //This listens to the device from going inactive/background to run outbox sync when it immediately is foregrounded
     const subscription = AppState.addEventListener(
       "change",
       (next: AppStateStatus) => {
