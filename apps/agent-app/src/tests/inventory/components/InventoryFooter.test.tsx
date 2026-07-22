@@ -35,11 +35,13 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-test("'Continue to Route' hands off to the inventory's continue action", () => {
+test("'Continue to Route' asks for confirmation before continuing", () => {
   const inventory = renderFooter();
 
   fireEvent.press(screen.getByText("Continue to Route"));
+  expect(inventory.handleContinue).not.toHaveBeenCalled();
 
+  fireEvent.press(screen.getByText("Continue"));
   expect(inventory.handleContinue).toHaveBeenCalled();
 });
 

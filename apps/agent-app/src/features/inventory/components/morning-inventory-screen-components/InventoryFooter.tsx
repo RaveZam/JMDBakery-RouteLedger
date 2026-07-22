@@ -1,33 +1,36 @@
+import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMorningInventory } from "@/src/features/inventory/context/useMorningInventory";
+import { ConfirmActionModal } from "@/src/shared/components/ConfirmActionModal";
 
 const HEADER_BG = "#0b4c29";
 
+function confirmCancel(cancelInventorySession: () => void) {
+  Alert.alert(
+    "Cancel this session?",
+    "This discards the current session. You can start a new one afterward.",
+    [
+      { text: "Keep session", style: "cancel" },
+      {
+        text: "Cancel session",
+        style: "destructive",
+        onPress: cancelInventorySession,
+      },
+    ],
+  );
+}
+
 export function InventoryFooter() {
   const { inventory } = useMorningInventory();
-
-  const confirmCancel = () => {
-    Alert.alert(
-      "Cancel this session?",
-      "This discards the current session. You can start a new one afterward.",
-      [
-        { text: "Keep session", style: "cancel" },
-        {
-          text: "Cancel session",
-          style: "destructive",
-          onPress: () => inventory.cancelInventorySession(),
-        },
-      ],
-    );
-  };
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   return (
     <View style={styles.footer}>
       <TouchableOpacity
         style={styles.continueBtn}
         activeOpacity={0.85}
-        onPress={inventory.handleContinue}
+        onPress={() => setConfirmVisible(true)}
       >
         <Text style={styles.continueBtnText}>Continue to Route</Text>
         <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
@@ -36,10 +39,23 @@ export function InventoryFooter() {
       <TouchableOpacity
         style={styles.cancelBtn}
         activeOpacity={0.7}
-        onPress={confirmCancel}
+        onPress={() => confirmCancel(inventory.cancelInventorySession)}
       >
         <Text style={styles.cancelBtnText}>Cancel Session</Text>
       </TouchableOpacity>
+
+      <ConfirmActionModal
+        visible={confirmVisible}
+        title="Continue to Route"
+        body="Are you sure you want to start, inventory is not editable after this point."
+        confirmLabel="Continue"
+        icon="arrow-forward"
+        onConfirm={() => {
+          setConfirmVisible(false);
+          inventory.handleContinue();
+        }}
+        onCancel={() => setConfirmVisible(false)}
+      />
     </View>
   );
 }
